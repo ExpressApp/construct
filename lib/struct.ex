@@ -1,0 +1,2 @@
+defmodule Struct do
+end
