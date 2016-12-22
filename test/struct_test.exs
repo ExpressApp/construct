@@ -108,6 +108,12 @@ defmodule StructTest do
         end
       end)
     end
+
+    test "MakeError" do
+      assert_raise(Struct.MakeError, "%{name: :missing}", fn ->
+        Data.make!(%{})
+      end)
+    end
   end
 
   def make(params, opts \\ []) do

@@ -6,6 +6,13 @@ defmodule Struct do
       def make(params \\ %{}, opts \\ []) do
         Struct.Cast.make(__MODULE__, params, opts)
       end
+
+      def make!(params \\ %{}, opts \\ []) do
+        case make(params, opts) do
+          {:ok, struct} -> struct
+          {:error, reason} -> raise Struct.MakeError, reason
+        end
+      end
     end
   end
 
