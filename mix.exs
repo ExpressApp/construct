@@ -7,26 +7,41 @@ defmodule Struct.Mixfile do
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     test_coverage: [tool: ExCoveralls],
+     preferred_cli_env: preferred_cli_env,
+     description: description(),
+     package: package(),
      deps: deps()]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger]]
+    [applications: []]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # Type "mix help deps" for more examples and options
+  defp preferred_cli_env do
+    ["coveralls": :test,
+     "coveralls.detail": :test,
+     "coveralls.post": :test,
+     "coveralls.html": :test]
+  end
+
   defp deps do
-    []
+    [{:decimal, "~> 1.3.1", only: [:dev, :test]},
+     {:benchfella, "~> 0.3.3", only: [:dev, :test]},
+     {:excoveralls, "~> 0.5", only: :test},
+     {:earmark, "~> 1.0.1", only: :dev},
+     {:ex_doc, "~> 0.13.0", only: :dev}]
+  end
+
+  defp description do
+    "Library for dealing with data structures"
+  end
+
+  defp package do
+    [name: :struct,
+     files: ["lib", "mix.exs"],
+     maintainers: ["Yuri Artemev"],
+     licenses: ["MIT"],
+     links: %{"GitHub" => "https://github.com/artemeff/struct"}]
   end
 end
