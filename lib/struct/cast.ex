@@ -40,7 +40,7 @@ defmodule Struct.Cast do
     data = struct
 
     {changes, errors, valid?} =
-      Enum.reduce(permitted, {%{}, [], true},
+      Enum.reduce(permitted, {%{}, %{}, true},
                   &process_param(&1, params, types, data, empty_values, &2))
 
     if valid? do
@@ -78,14 +78,14 @@ defmodule Struct.Cast do
         {Map.put(changes, key, value), errors, valid?}
       :missing ->
         if required? do
-          {changes, [{key, :missing} | errors], false}
+          {changes, Map.put(errors, key, :missing), false}
         else
           {changes, errors, valid?}
         end
       :same ->
         {changes, errors, valid?}
       :invalid ->
-        {changes, [{key, type} | errors], false}
+        {changes, Map.put(errors, key, type), false}
     end
   end
 

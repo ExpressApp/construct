@@ -87,7 +87,7 @@ defmodule StructTest do
 
   describe "error when" do
     test "name is missing but required by default" do
-      assert {:error, [name: :missing]}
+      assert {:error, %{name: :missing}}
           == make(%{age: 10})
     end
 
