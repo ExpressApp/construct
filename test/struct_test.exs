@@ -22,6 +22,7 @@ defmodule StructTest do
       field :data, :any, default: nil
       field :data_map, {:map, [:string, :integer]}, default: nil
       field :embedded, Embedded, default: nil
+      field :raw_map, :map, default: nil
     end
   end
 
@@ -59,6 +60,11 @@ defmodule StructTest do
     test "embedded field is passed" do
       assert {:ok, %Data{name: "john", embedded: %Embedded{a: 1, b: "", c: [42, 1.1]}}}
           == make(%{name: "john", embedded: %{a: 1, b: "", c: [42, 1.1]}})
+    end
+
+    test "raw_map field is passed" do
+      assert {:ok, %Data{name: "john", raw_map: %{a: 1, b: "", c: [42, 1.1]}}}
+          == make(%{name: "john", raw_map: %{a: 1, b: "", c: [42, 1.1]}})
     end
 
     test "field with default value is missing" do
