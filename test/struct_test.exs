@@ -25,6 +25,14 @@ defmodule StructTest do
     end
   end
 
+  defmodule Default do
+    use Struct
+
+    structure do
+      field :hash, :map, default: %{}
+    end
+  end
+
   describe "creates when" do
     test "params are valid" do
       assert {:ok, %Data{name: "test", age: 10}}
@@ -63,6 +71,11 @@ defmodule StructTest do
           == make(%{name: "test", body: "string"})
       assert {:ok, %Data{name: "test", age: 18, body: %{map: "valid"}}}
           == make(%{name: "test", body: %{map: "valid"}})
+    end
+
+    test "default hash" do
+      assert {:ok, %Default{hash: %{}}}
+          == Default.make()
     end
   end
 
