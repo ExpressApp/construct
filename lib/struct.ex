@@ -56,7 +56,7 @@ defmodule Struct do
 
     types =
       fields
-      |> Enum.into(%{}, fn({name, type, default}) -> {name, type} end)
+      |> Enum.into(%{}, fn({name, type, _default}) -> {name, type} end)
       |> Macro.escape
 
     quote do
@@ -78,7 +78,7 @@ defmodule Struct do
     check_default!(Keyword.get(opts, :default))
   end
 
-  defp check_type!(name, type) do
+  defp check_type!(_name, _type) do
     :ok
   end
 

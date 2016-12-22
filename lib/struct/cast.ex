@@ -111,7 +111,7 @@ defmodule Struct.Cast do
     {key, Atom.to_string(key)}
   end
 
-  defp cast_field(key, param_key, type, type_opts, params, current, empty_values, valid?) do
+  defp cast_field(_key, param_key, type, type_opts, params, current, empty_values, valid?) do
     case Map.fetch(params, param_key) do
       {:ok, value} ->
         case Struct.Type.cast(type, value) do

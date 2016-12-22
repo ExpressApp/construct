@@ -180,7 +180,7 @@ defmodule Struct.Type do
     Enum.reduce(types, nil, fn
       (_type, {:ok, term}) ->
         {:ok, term}
-      (type, acc) ->
+      (type, _acc) ->
         case cast(type, term) do
           {:ok, term} -> {:ok, term}
           :error -> :error
