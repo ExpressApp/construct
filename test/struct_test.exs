@@ -91,6 +91,11 @@ defmodule StructTest do
           == make(%{age: 10})
     end
 
+    test "embedded field is invalid" do
+      assert {:error, %{embedded: StructTest.Embedded}}
+          == make(%{name: "john", embedded: %{}})
+    end
+
     test "tries to pass map with mixed keys type" do
       assert_raise(Struct.CastError, fn ->
         make(%{"name" => "john", age: 10})

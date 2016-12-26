@@ -4,11 +4,17 @@ defmodule Struct.TypeTest do
   alias Struct.Type
 
   defmodule CustomStruct do
-    def make(params, _opts) when params == %{} do
+    def cast(params) when params == %{} do
       :error
     end
-    def make(params, _opts) do
+    def cast(params) do
       {:ok, params}
+    end
+  end
+
+  defmodule CustomStruct2 do
+    def cast(params) do
+      {:ok, Map.merge(params, %{custom_struct: 2})}
     end
   end
 
@@ -27,6 +33,13 @@ defmodule Struct.TypeTest do
           == Type.cast(CustomStruct, :a)
       assert :error
           == Type.cast(CustomStruct, %{})
+    end
+
+    test "[CustomStruct, CustomStruct2]" do
+      assert {:ok, :a}
+          == Type.cast([CustomStruct, CustomStruct2], :a)
+      assert {:ok, %{custom_struct: 2}}
+          == Type.cast([CustomStruct, CustomStruct2], %{})
     end
 
     test "CustomType" do

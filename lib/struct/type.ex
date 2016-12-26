@@ -191,11 +191,7 @@ defmodule Struct.Type do
   def cast(type, term) do
     cond do
       not primitive?(type) ->
-        if function_exported?(type, :make, 2) do
-          type.make(term, [])
-        else
-          type.cast(term)
-        end
+        type.cast(term)
       of_base_type?(type, term) ->
         {:ok, term}
       true ->
