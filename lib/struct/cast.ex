@@ -51,6 +51,9 @@ defmodule Struct.Cast do
   end
 
   @doc false
+  def convert_params(%{__struct__: _} = params) do
+    convert_params(Map.from_struct(params))
+  end
   def convert_params(params) do
     Enum.reduce(params, nil, fn
       ({key, _value}, nil) when is_binary(key) ->
