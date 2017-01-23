@@ -8,7 +8,7 @@ defmodule Struct.Mixfile do
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      test_coverage: [tool: ExCoveralls],
-     preferred_cli_env: preferred_cli_env,
+     preferred_cli_env: preferred_cli_env(),
      description: description(),
      package: package(),
      deps: deps()]
