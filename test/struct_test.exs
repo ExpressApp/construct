@@ -34,6 +34,23 @@ defmodule StructTest do
     end
   end
 
+  defmodule CustomType do
+    def cast(value) when is_list(value) do
+      {:ok, value}
+    end
+    def cast(_) do
+      {:error, :invalid_custom_list}
+    end
+  end
+
+  defmodule StructWithCustomType do
+    use Struct
+
+    structure do
+      field :list, CustomType
+    end
+  end
+
   describe "creates when" do
     test "params are valid" do
       assert {:ok, %Data{name: "test", age: 10}}
@@ -83,6 +100,11 @@ defmodule StructTest do
       assert {:ok, %Default{hash: %{}}}
           == Default.make()
     end
+
+    test "custom type is valid" do
+      assert {:ok, %StructWithCustomType{list: []}}
+          == StructWithCustomType.make(%{list: []})
+    end
   end
 
   describe "error when" do
@@ -92,7 +114,7 @@ defmodule StructTest do
     end
 
     test "embedded field is invalid" do
-      assert {:error, %{embedded: StructTest.Embedded}}
+      assert {:error, %{embedded: %{a: :missing, b: :missing, c: :missing}}}
           == make(%{name: "john", embedded: %{}})
     end
 
@@ -118,6 +140,11 @@ defmodule StructTest do
       assert_raise(Struct.MakeError, "%{name: :missing}", fn ->
         Data.make!(%{})
       end)
+    end
+
+    test "custom type is invalid" do
+      assert {:error, %{list: :invalid_custom_list}}
+          == StructWithCustomType.make(%{list: "what"})
     end
   end
 

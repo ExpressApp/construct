@@ -15,10 +15,7 @@ defmodule Struct do
       end
 
       def cast(params) do
-        case make(params) do
-          {:ok, struct} -> {:ok, struct}
-          {:error, _reason} -> :error
-        end
+        make(params)
       end
 
       defoverridable make: 2

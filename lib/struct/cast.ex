@@ -89,6 +89,8 @@ defmodule Struct.Cast do
         {changes, errors, valid?}
       :invalid ->
         {changes, Map.put(errors, key, type), false}
+      {:error, reason} ->
+        {changes, Map.put(errors, key, reason), false}
     end
   end
 
@@ -126,6 +128,8 @@ defmodule Struct.Cast do
             else
               {:ok, value, valid?}
             end
+          {:error, reason} ->
+            {:error, reason}
           :error ->
             :invalid
         end
