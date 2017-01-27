@@ -27,6 +27,15 @@ defmodule Struct.TypeTest do
     end
   end
 
+  defmodule CustomTypeReason do
+    def cast(term) when map_size(term) == 0 do
+      {:error, :empty_map}
+    end
+    def cast(term) do
+      {:ok, term}
+    end
+  end
+
   describe "#cast" do
     test "CustomStruct" do
       assert {:ok, :a}
@@ -72,6 +81,13 @@ defmodule Struct.TypeTest do
           == Type.cast({:array, :string}, [1, 2])
     end
 
+    test "{:array, CustomTypeReason}" do
+      assert {:ok, [%{a: 1}, %{b: 2}]}
+          == Type.cast({:array, CustomTypeReason}, [%{a: 1}, %{b: 2}])
+      assert {:error, :empty_map}
+          == Type.cast({:array, CustomTypeReason}, [%{a: 1}, %{}])
+    end
+
     test "{:array, [:integer, :string]}" do
       assert {:ok, ["a", "b"]}
           == Type.cast({:array, [:integer, :string]}, ["a", "b"])
@@ -88,6 +104,13 @@ defmodule Struct.TypeTest do
           == Type.cast({:map, :string}, %{a: "test"})
       assert :error
           == Type.cast({:map, :string}, %{a: :test})
+    end
+
+    test "{:map, CustomTypeReason}" do
+      assert {:ok, %{a: %{b: 1}}}
+          == Type.cast({:map, CustomTypeReason}, %{a: %{b: 1}})
+      assert {:error, :empty_map}
+          == Type.cast({:map, CustomTypeReason}, %{a: %{}})
     end
 
     test "{:map, [:integer, :string]}" do

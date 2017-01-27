@@ -22,6 +22,7 @@ defmodule StructTest do
       field :data, :any, default: nil
       field :data_map, {:map, [:string, :integer]}, default: nil
       field :embedded, Embedded, default: nil
+      field :embeddeds, {:array, Embedded}, default: nil
       field :raw_map, :map, default: nil
     end
   end
@@ -96,6 +97,11 @@ defmodule StructTest do
           == make(%{name: "john", embedded: %{a: 1, b: "", c: [42, 1.1]}})
     end
 
+    test "embeddeds field is passed" do
+      assert {:ok, %Data{name: "john", embeddeds: [%Embedded{a: 1, b: "", c: [42, 1.1]}]}}
+          == make(%{name: "john", embeddeds: [%{a: 1, b: "", c: [42, 1.1]}]})
+    end
+
     test "raw_map field is passed" do
       assert {:ok, %Data{name: "john", raw_map: %{a: 1, b: "", c: [42, 1.1]}}}
           == make(%{name: "john", raw_map: %{a: 1, b: "", c: [42, 1.1]}})
@@ -133,6 +139,11 @@ defmodule StructTest do
     test "embedded field is invalid" do
       assert {:error, %{embedded: %{a: :missing, b: :missing, c: :missing}}}
           == make(%{name: "john", embedded: %{}})
+    end
+
+    test "embeddeds field is invalid" do
+      assert {:error, %{embeddeds: %{a: :missing, b: :missing, c: :missing}}}
+          == make(%{name: "john", embeddeds: [%{}]})
     end
 
     test "tries to pass map with mixed keys type" do

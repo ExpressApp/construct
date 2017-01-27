@@ -323,7 +323,8 @@ defmodule Struct.Type do
   defp array([h|t], type, fun, acc) do
     case fun.(type, h) do
       {:ok, h} -> array(t, type, fun, [h|acc])
-      :error   -> :error
+      {:error, reason} -> {:error, reason}
+      :error -> :error
     end
   end
 
@@ -334,6 +335,7 @@ defmodule Struct.Type do
   defp map([{key, value} | t], type, fun, acc) do
     case fun.(type, value) do
       {:ok, value} -> map(t, type, fun, Map.put(acc, key, value))
+      {:error, reason} -> {:error, reason}
       :error -> :error
     end
   end
