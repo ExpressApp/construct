@@ -51,6 +51,23 @@ defmodule StructTest do
     end
   end
 
+  defmodule EctoTypeCast do
+    def cast(value) when is_binary(value) do
+      {:ok, value}
+    end
+    def cast(_value) do
+      :error
+    end
+  end
+
+  defmodule EctoCast do
+    use Struct
+
+    structure do
+      field :name, EctoTypeCast
+    end
+  end
+
   describe "creates when" do
     test "params are valid" do
       assert {:ok, %Data{name: "test", age: 10}}
@@ -145,6 +162,11 @@ defmodule StructTest do
     test "custom type is invalid" do
       assert {:error, %{list: :invalid_custom_list}}
           == StructWithCustomType.make(%{list: "what"})
+    end
+
+    test "custom type (like Ecto types) is invalid" do
+      assert {:error, %{name: :invalid}}
+          == EctoCast.make(%{name: :test})
     end
   end
 

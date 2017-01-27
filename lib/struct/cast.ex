@@ -87,8 +87,6 @@ defmodule Struct.Cast do
         end
       :same ->
         {changes, errors, valid?}
-      :invalid ->
-        {changes, Map.put(errors, key, type), false}
       {:error, reason} ->
         {changes, Map.put(errors, key, reason), false}
     end
@@ -131,7 +129,7 @@ defmodule Struct.Cast do
           {:error, reason} ->
             {:error, reason}
           :error ->
-            :invalid
+            {:error, :invalid}
         end
       :error ->
         case Keyword.fetch(type_opts, :default) do
