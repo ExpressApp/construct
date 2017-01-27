@@ -19,6 +19,9 @@ defmodule Struct.TypeTest do
   end
 
   defmodule CustomType do
+    def cast(nil) do
+      :error
+    end
     def cast(%{}) do
       :error
     end
@@ -60,7 +63,11 @@ defmodule Struct.TypeTest do
 
     test "nil" do
       assert {:ok, nil}
-          == Type.cast(:some, nil)
+          == Type.cast(:any, nil)
+      assert {:ok, nil}
+          == Type.cast(:integer, nil)
+      assert :error
+          == Type.cast(CustomType, nil)
     end
 
     test "[...]" do

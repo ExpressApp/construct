@@ -125,7 +125,13 @@ defmodule Struct.Type do
   """
   @spec cast(t, term) :: {:ok, term} | :error
 
-  def cast(_type, nil), do: {:ok, nil}
+  def cast(type, nil) do
+    if primitive?(type) do
+      {:ok, nil}
+    else
+      type.cast(nil)
+    end
+  end
 
   def cast({:array, type}, term) when is_list(term) do
     array(term, type, &cast/2, [])
