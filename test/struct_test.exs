@@ -69,6 +69,28 @@ defmodule StructTest do
     end
   end
 
+  defmodule InPlaceNested do
+    use Struct
+
+    structure do
+      field :nested do
+        field :a, :string
+        field :b, CustomType
+      end
+    end
+  end
+
+  defmodule InPlaceNestedWithOpts do
+    use Struct
+
+    structure do
+      field :nested, [default: %{}] do
+        field :a, :string
+        field :b, CustomType
+      end
+    end
+  end
+
   describe "creates when" do
     test "params are valid" do
       assert {:ok, %Data{name: "test", age: 10}}
@@ -127,6 +149,16 @@ defmodule StructTest do
     test "custom type is valid" do
       assert {:ok, %StructWithCustomType{list: []}}
           == StructWithCustomType.make(%{list: []})
+    end
+
+    test "with in place nested fields" do
+      assert {:ok, %InPlaceNested{nested: %InPlaceNested.Nested{a: "a", b: []}}}
+          == InPlaceNested.make(%{nested: %{a: "a", b: []}})
+    end
+
+    test "with in place nested fields and opts" do
+      assert {:ok, %InPlaceNestedWithOpts{nested: %{}}}
+          == InPlaceNestedWithOpts.make(%{})
     end
   end
 
