@@ -34,17 +34,22 @@ defmodule Struct.Cast do
   @doc false
   defp make(%{__struct__: _module} = struct, types, params, opts) do
     {empty_values, _opts} = Keyword.pop(opts, :empty_values, @empty_values)
-
+    make_map? = Keyword.get(opts, :make_map, false)
     params = convert_params(params)
     permitted = Map.keys(types)
     data = struct
 
     {changes, errors, valid?} =
       Enum.reduce(permitted, {%{}, %{}, true},
-                  &process_param(&1, params, types, data, empty_values, &2))
+                  &process_param(&1, params, types, data, empty_values, opts, &2))
 
     if valid? do
-      {:ok, apply_changes(struct, changes)}
+      changes = apply_changes(struct, changes)
+      if make_map? do
+        {:ok, Map.from_struct(changes)}
+      else
+        {:ok, changes}
+      end
     else
       {:error, errors}
     end
@@ -69,14 +74,14 @@ defmodule Struct.Cast do
     end) || params
   end
 
-  defp process_param(key, params, types, data, empty_values, {changes, errors, valid?}) do
+  defp process_param(key, params, types, data, empty_values, opts, {changes, errors, valid?}) do
     {key, param_key} = cast_key(key)
     {type, type_opts} = type!(types, key)
 
     required? = Keyword.get(type_opts, :required, true)
     current = Map.get(data, key)
 
-    case cast_field(key, param_key, type, type_opts, params, current, empty_values, valid?) do
+    case cast_field(key, param_key, type, type_opts, params, current, empty_values, opts, valid?) do
       {:ok, value, valid?} ->
         {Map.put(changes, key, value), errors, valid?}
       :missing ->
@@ -114,10 +119,10 @@ defmodule Struct.Cast do
     {key, Atom.to_string(key)}
   end
 
-  defp cast_field(_key, param_key, type, type_opts, params, current, empty_values, valid?) do
+  defp cast_field(_key, param_key, type, type_opts, params, current, empty_values, opts, valid?) do
     case Map.fetch(params, param_key) do
       {:ok, value} ->
-        case Struct.Type.cast(type, value) do
+        case Struct.Type.cast(type, value, opts) do
           {:ok, ^current} ->
             :same
           {:ok, value} ->

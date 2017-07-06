@@ -123,22 +123,47 @@ defmodule Struct.Type do
       :error
 
   """
-  @spec cast(t, term) :: {:ok, term} | :error
+  @spec cast(t, term, [make_map: :boolean]) :: {:ok, term} | :error
 
+  def cast({:array, type}, term, opts) when is_list(term) do
+    array(term, type, &cast/3, [], opts)
+  end
+
+  def cast({:map, type}, term, opts) when is_map(term) do
+    map(Map.to_list(term), type, &cast/3, %{}, opts)
+  end
+
+  def cast(type, term, opts) when is_atom(type) do
+    cond do
+      not primitive?(type) ->
+        if function_exported?(type, :cast, 2) do
+          type.cast(term, opts)
+        else
+          type.cast(term)
+        end
+      true ->
+        cast(type, term)
+    end
+  end
+
+  def cast(type, term, _opts) do
+    cast(type, term)
+  end
+
+  @spec cast(t, term) :: {:ok, term} | :error
+  def cast({:array, type}, term) when is_list(term) do
+    array(term, type, &cast/3, [], [])
+  end
+
+  def cast({:map, type}, term) when is_map(term) do
+    map(Map.to_list(term), type, &cast/3, %{}, [])
+  end
   def cast(type, nil) do
     if primitive?(type) do
       {:ok, nil}
     else
       type.cast(nil)
     end
-  end
-
-  def cast({:array, type}, term) when is_list(term) do
-    array(term, type, &cast/2, [])
-  end
-
-  def cast({:map, type}, term) when is_map(term) do
-    map(Map.to_list(term), type, &cast/2, %{})
   end
 
   def cast(:float, term) when is_binary(term) do
@@ -326,31 +351,33 @@ defmodule Struct.Type do
   defp of_base_type?(:decimal, value),   do: match?(%{__struct__: Decimal}, value)
   defp of_base_type?(_, _),              do: false
 
-  defp array([h|t], type, fun, acc) do
-    case fun.(type, h) do
-      {:ok, h} -> array(t, type, fun, [h|acc])
+  defp array([h|t], type, fun, acc, opts) do
+    case fun.(type, h, opts) do
+      {:ok, h} -> array(t, type, fun, [h|acc], opts)
       {:error, reason} -> {:error, reason}
       :error -> :error
     end
   end
 
-  defp array([], _type, _fun, acc) do
+  defp array([], _type, _fun, acc, _opts) do
     {:ok, Enum.reverse(acc)}
   end
 
-  defp map([{key, value} | t], type, fun, acc) do
-    case fun.(type, value) do
+  defp map(list, type, fun, acc, opts \\ [])
+
+  defp map([{key, value} | t], type, fun, acc, opts) do
+    case fun.(type, value, opts) do
       {:ok, value} -> map(t, type, fun, Map.put(acc, key, value))
       {:error, reason} -> {:error, reason}
       :error -> :error
     end
   end
 
-  defp map([], _type, _fun, acc) do
+  defp map([], _type, _fun, acc, _opts) do
     {:ok, acc}
   end
 
-  defp map(_, _, _, _), do: :error
+  defp map(_, _, _, _, _), do: :error
 
   defp to_i(nil), do: nil
   defp to_i(int) when is_integer(int), do: int
