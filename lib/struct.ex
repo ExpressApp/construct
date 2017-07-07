@@ -14,8 +14,8 @@ defmodule Struct do
         end
       end
 
-      def cast(params) do
-        make(params)
+      def cast(params, opts \\ []) do
+        make(params, opts)
       end
 
       defoverridable make: 2

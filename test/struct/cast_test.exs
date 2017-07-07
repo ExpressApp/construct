@@ -25,6 +25,13 @@ defmodule Struct.CastTest do
     end
   end
 
+  describe "makes map with make_map option when" do
+    test "pass valid module" do
+      assert {:ok, %{a: "test"}}
+        == Cast.make(Valid, %{a: "test"}, make_map: true)
+    end
+  end
+
   describe "throws error when" do
     test "pass invalid module" do
       assert_raise(Struct.Error, fn ->

@@ -116,12 +116,18 @@ defmodule StructTest do
 
     test "embedded field is passed" do
       assert {:ok, %Data{name: "john", embedded: %Embedded{a: 1, b: "", c: [42, 1.1]}}}
-          == make(%{name: "john", embedded: %{a: 1, b: "", c: [42, 1.1]}})
+           == make(%{name: "john", embedded: %{a: 1, b: "", c: [42, 1.1]}})
+      assert {:ok, %{name: "john", age: 18, body: nil, data: nil, data_map: nil, embeddeds: nil,
+        friends: nil, raw_map: nil, embedded: %{a: 1, b: "", c: [42, 1.1]}}}
+          == make(%{name: "john", embedded: %{a: 1, b: "", c: [42, 1.1]}}, make_map: true)
     end
 
     test "embeddeds field is passed" do
       assert {:ok, %Data{name: "john", embeddeds: [%Embedded{a: 1, b: "", c: [42, 1.1]}]}}
           == make(%{name: "john", embeddeds: [%{a: 1, b: "", c: [42, 1.1]}]})
+      assert {:ok, %{name: "john", age: 18, body: nil, data: nil, data_map: nil, embedded: nil,
+        friends: nil, raw_map: nil, embeddeds: [%{a: 1, b: "", c: [42, 1.1]}]}}
+          == make(%{name: "john", embeddeds: [%{a: 1, b: "", c: [42, 1.1]}]}, make_map: true)
     end
 
     test "raw_map field is passed" do
