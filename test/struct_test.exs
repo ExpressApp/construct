@@ -145,6 +145,8 @@ defmodule StructTest do
           == make(%{name: "test", body: "string"})
       assert {:ok, %Data{name: "test", age: 18, body: %{map: "valid"}}}
           == make(%{name: "test", body: %{map: "valid"}})
+      assert {:ok, %Data{name: "test", age: 18, body: nil}}
+          == make(%{name: "test", body: nil})
     end
 
     test "default hash" do

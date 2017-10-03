@@ -158,13 +158,6 @@ defmodule Struct.Type do
   def cast({:map, type}, term) when is_map(term) do
     map(Map.to_list(term), type, &cast/3, %{}, [])
   end
-  def cast(type, nil) do
-    if primitive?(type) do
-      {:ok, nil}
-    else
-      type.cast(nil)
-    end
-  end
 
   def cast(:float, term) when is_binary(term) do
     case Float.parse(term) do
@@ -217,6 +210,14 @@ defmodule Struct.Type do
           :error -> :error
         end
     end)
+  end
+
+  def cast(type, nil) do
+    if primitive?(type) do
+      {:ok, nil}
+    else
+      type.cast(nil)
+    end
   end
 
   def cast(type, term) do
