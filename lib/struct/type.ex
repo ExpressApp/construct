@@ -212,14 +212,6 @@ defmodule Struct.Type do
     end)
   end
 
-  def cast(type, nil) do
-    if primitive?(type) do
-      {:ok, nil}
-    else
-      type.cast(nil)
-    end
-  end
-
   def cast(type, term) do
     cond do
       not primitive?(type) ->

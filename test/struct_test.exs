@@ -145,8 +145,6 @@ defmodule StructTest do
           == make(%{name: "test", body: "string"})
       assert {:ok, %Data{name: "test", age: 18, body: %{map: "valid"}}}
           == make(%{name: "test", body: %{map: "valid"}})
-      assert {:ok, %Data{name: "test", age: 18, body: nil}}
-          == make(%{name: "test", body: nil})
     end
 
     test "default hash" do
@@ -174,6 +172,11 @@ defmodule StructTest do
     test "name is missing but required by default" do
       assert {:error, %{name: :missing}}
           == make(%{age: 10})
+    end
+
+    test "name is invalid when passed as nil" do
+      assert {:error, %{name: :invalid}}
+          == make(%{name: nil})
     end
 
     test "embedded field is invalid" do

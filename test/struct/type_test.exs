@@ -64,7 +64,7 @@ defmodule Struct.TypeTest do
     test "nil" do
       assert {:ok, nil}
           == Type.cast(:any, nil)
-      assert {:ok, nil}
+      assert :error
           == Type.cast(:integer, nil)
       assert :error
           == Type.cast(CustomType, nil)
