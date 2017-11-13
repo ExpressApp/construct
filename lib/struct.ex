@@ -1,10 +1,10 @@
 defmodule Struct do
-  defmacro __using__(_opts) do
+  defmacro __using__(opts \\ []) do
     quote do
       import Struct, only: [structure: 1]
 
       def make(params \\ %{}, opts \\ []) do
-        Struct.Cast.make(__MODULE__, params, opts)
+        Struct.Cast.make(__MODULE__, params, Keyword.merge(opts, unquote(opts)))
       end
 
       def make!(params \\ %{}, opts \\ []) do

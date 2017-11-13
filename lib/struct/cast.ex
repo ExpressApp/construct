@@ -1,6 +1,4 @@
 defmodule Struct.Cast do
-  @empty_values []
-
   def make(module, params, opts \\ [])
   def make(module, params, opts) when is_atom(module) do
     make(make_struct_instance(module), collect_types(module), params, opts)
@@ -33,7 +31,7 @@ defmodule Struct.Cast do
 
   @doc false
   defp make(%{__struct__: _module} = struct, types, params, opts) do
-    {empty_values, _opts} = Keyword.pop(opts, :empty_values, @empty_values)
+    empty_values = Keyword.get(opts, :empty_values, [])
     make_map? = Keyword.get(opts, :make_map, false)
     params = convert_params(params)
     permitted = Map.keys(types)

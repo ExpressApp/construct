@@ -91,6 +91,14 @@ defmodule StructTest do
     end
   end
 
+  defmodule StructWithOpts do
+    use Struct, make_map: true, empty_values: [nil, ""]
+
+    structure do
+      field :a, :string
+    end
+  end
+
   describe "creates when" do
     test "params are valid" do
       assert {:ok, %Data{name: "test", age: 10}}
@@ -166,6 +174,10 @@ defmodule StructTest do
       assert {:ok, %InPlaceNestedWithOpts{nested: %{}}}
           == InPlaceNestedWithOpts.make(%{})
     end
+
+    test "with opts" do
+      assert {:ok, %{a: "what"}} == StructWithOpts.make(%{a: "what"})
+    end
   end
 
   describe "error when" do
@@ -187,6 +199,11 @@ defmodule StructTest do
     test "embeddeds field is invalid" do
       assert {:error, %{embeddeds: %{a: :missing, b: :missing, c: :missing}}}
           == make(%{name: "john", embeddeds: [%{}]})
+    end
+
+    test "passed value in empty_values" do
+      assert {:error, %{a: :invalid}} == StructWithOpts.make(%{a: nil})
+      assert {:error, %{a: :missing}} == StructWithOpts.make(%{a: ""})
     end
 
     test "tries to pass map with mixed keys type" do
