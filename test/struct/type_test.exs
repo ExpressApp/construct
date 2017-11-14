@@ -47,13 +47,6 @@ defmodule Struct.TypeTest do
           == Type.cast(CustomStruct, %{})
     end
 
-    test "[CustomStruct, CustomStruct2]" do
-      assert {:ok, :a}
-          == Type.cast([CustomStruct, CustomStruct2], :a)
-      assert {:ok, %{custom_struct: 2}}
-          == Type.cast([CustomStruct, CustomStruct2], %{})
-    end
-
     test "CustomType" do
       assert {:ok, :a}
           == Type.cast(CustomType, :a)
@@ -70,17 +63,6 @@ defmodule Struct.TypeTest do
           == Type.cast(CustomType, nil)
     end
 
-    test "[...]" do
-      assert {:ok, "a"}
-          == Type.cast([:string, :integer], "a")
-      assert {:ok, 42}
-          == Type.cast([:string, :integer], 42)
-      assert :error
-          == Type.cast([:string, :integer], 1.1)
-      assert :error
-          == Type.cast([:string, :integer], :test)
-    end
-
     test "{:array, :string}" do
       assert {:ok, ["a", "b"]}
           == Type.cast({:array, :string}, ["a", "b"])
@@ -95,17 +77,6 @@ defmodule Struct.TypeTest do
           == Type.cast({:array, CustomTypeReason}, [%{a: 1}, %{}])
     end
 
-    test "{:array, [:integer, :string]}" do
-      assert {:ok, ["a", "b"]}
-          == Type.cast({:array, [:integer, :string]}, ["a", "b"])
-      assert {:ok, ["a", 42]}
-          == Type.cast({:array, [:integer, :string]}, ["a", 42])
-      assert {:ok, [42, 42]}
-          == Type.cast({:array, [:integer, :string]}, [42, 42])
-      assert :error
-          == Type.cast({:array, [:integer, :string]}, [1.1, :test])
-    end
-
     test "{:map, :string}" do
       assert {:ok, %{a: "test"}}
           == Type.cast({:map, :string}, %{a: "test"})
@@ -118,13 +89,6 @@ defmodule Struct.TypeTest do
           == Type.cast({:map, CustomTypeReason}, %{a: %{b: 1}})
       assert {:error, :empty_map}
           == Type.cast({:map, CustomTypeReason}, %{a: %{}})
-    end
-
-    test "{:map, [:integer, :string]}" do
-      assert {:ok, %{a: "test", b: 42}}
-          == Type.cast({:map, [:integer, :string]}, %{a: "test", b: 42})
-      assert :error
-          == Type.cast({:map, [:integer, :string]}, %{a: 1.1, b: :test})
     end
 
     test ":float" do

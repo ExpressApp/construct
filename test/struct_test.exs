@@ -7,7 +7,6 @@ defmodule StructTest do
     structure do
       field :a, :integer
       field :b, :string
-      field :c, {:array, [:integer, :float]}
     end
   end
 
@@ -17,10 +16,9 @@ defmodule StructTest do
     structure do
       field :name, :string
       field :age, :integer, default: 18
-      field :friends, {:array, [:map, :string]}, default: nil
-      field :body, [:map, :string], required: false
+      field :friends, {:array, :string}, default: nil
       field :data, :any, default: nil
-      field :data_map, {:map, [:string, :integer]}, default: nil
+      field :data_map, {:map, :string}, default: nil
       field :embedded, Embedded, default: nil
       field :embeddeds, {:array, Embedded}, default: nil
       field :raw_map, :map, default: nil
@@ -105,14 +103,19 @@ defmodule StructTest do
           == make(%{name: "test", age: 10})
     end
 
+    test "params made from self" do
+      assert {:ok, %Data{name: "test", age: 18}}
+          == make(%Data{name: "test"})
+    end
+
     test "array is passed" do
       assert {:ok, %Data{name: "test", friends: ["test"]}}
           == make(%{name: "test", friends: ["test"]})
     end
 
     test "map is passed" do
-      assert {:ok, %Data{name: "test", data_map: %{a: "string", b: 2}}}
-          == make(%{name: "test", data_map: %{a: "string", b: 2}})
+      assert {:ok, %Data{name: "test", data_map: %{a: "string", b: "2"}}}
+          == make(%{name: "test", data_map: %{a: "string", b: "2"}})
     end
 
     test "any fields is passed" do
@@ -123,36 +126,29 @@ defmodule StructTest do
     end
 
     test "embedded field is passed" do
-      assert {:ok, %Data{name: "john", embedded: %Embedded{a: 1, b: "", c: [42, 1.1]}}}
-           == make(%{name: "john", embedded: %{a: 1, b: "", c: [42, 1.1]}})
-      assert {:ok, %{name: "john", age: 18, body: nil, data: nil, data_map: nil, embeddeds: nil,
-        friends: nil, raw_map: nil, embedded: %{a: 1, b: "", c: [42, 1.1]}}}
-          == make(%{name: "john", embedded: %{a: 1, b: "", c: [42, 1.1]}}, make_map: true)
+      assert {:ok, %Data{name: "john", embedded: %Embedded{a: 1, b: ""}}}
+           == make(%{name: "john", embedded: %{a: 1, b: ""}})
+      assert {:ok, %{name: "john", age: 18, data: nil, data_map: nil, embeddeds: nil,
+                     friends: nil, raw_map: nil, embedded: %{a: 1, b: ""}}}
+          == make(%{name: "john", embedded: %{a: 1, b: ""}}, make_map: true)
     end
 
     test "embeddeds field is passed" do
-      assert {:ok, %Data{name: "john", embeddeds: [%Embedded{a: 1, b: "", c: [42, 1.1]}]}}
-          == make(%{name: "john", embeddeds: [%{a: 1, b: "", c: [42, 1.1]}]})
-      assert {:ok, %{name: "john", age: 18, body: nil, data: nil, data_map: nil, embedded: nil,
-        friends: nil, raw_map: nil, embeddeds: [%{a: 1, b: "", c: [42, 1.1]}]}}
-          == make(%{name: "john", embeddeds: [%{a: 1, b: "", c: [42, 1.1]}]}, make_map: true)
+      assert {:ok, %Data{name: "john", embeddeds: [%Embedded{a: 1, b: ""}]}}
+          == make(%{name: "john", embeddeds: [%{a: 1, b: ""}]})
+      assert {:ok, %{name: "john", age: 18, data: nil, data_map: nil, embedded: nil,
+                     friends: nil, raw_map: nil, embeddeds: [%{a: 1, b: ""}]}}
+          == make(%{name: "john", embeddeds: [%{a: 1, b: ""}]}, make_map: true)
     end
 
     test "raw_map field is passed" do
-      assert {:ok, %Data{name: "john", raw_map: %{a: 1, b: "", c: [42, 1.1]}}}
-          == make(%{name: "john", raw_map: %{a: 1, b: "", c: [42, 1.1]}})
+      assert {:ok, %Data{name: "john", raw_map: %{a: 1, b: ""}}}
+          == make(%{name: "john", raw_map: %{a: 1, b: ""}})
     end
 
     test "field with default value is missing" do
       assert {:ok, %Data{name: "test", age: 18}}
           == make(%{name: "test"})
-    end
-
-    test "field have ambiguous type" do
-      assert {:ok, %Data{name: "test", age: 18, body: "string"}}
-          == make(%{name: "test", body: "string"})
-      assert {:ok, %Data{name: "test", age: 18, body: %{map: "valid"}}}
-          == make(%{name: "test", body: %{map: "valid"}})
     end
 
     test "default hash" do
@@ -181,7 +177,7 @@ defmodule StructTest do
   end
 
   describe "error when" do
-    test "name is missing but required by default" do
+    test "name is missing (doesn't have default value)" do
       assert {:error, %{name: :missing}}
           == make(%{age: 10})
     end
@@ -191,18 +187,18 @@ defmodule StructTest do
           == make(%{name: nil})
     end
 
-    test "embedded field is invalid" do
-      assert {:error, %{embedded: %{a: :missing, b: :missing, c: :missing}}}
+    test "embedded field is invalid (missing some keys)" do
+      assert {:error, %{embedded: %{a: :missing, b: :missing}}}
           == make(%{name: "john", embedded: %{}})
     end
 
-    test "embeddeds field is invalid" do
-      assert {:error, %{embeddeds: %{a: :missing, b: :missing, c: :missing}}}
+    test "embeddeds field is invalid (missing some keys)" do
+      assert {:error, %{embeddeds: %{a: :missing, b: :missing}}}
           == make(%{name: "john", embeddeds: [%{}]})
     end
 
     test "passed value in empty_values" do
-      assert {:error, %{a: :invalid}} == StructWithOpts.make(%{a: nil})
+      assert {:error, %{a: :missing}} == StructWithOpts.make(%{a: nil})
       assert {:error, %{a: :missing}} == StructWithOpts.make(%{a: ""})
     end
 

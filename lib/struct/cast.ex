@@ -1,7 +1,12 @@
 defmodule Struct.Cast do
+  @default_value :__struct_no_default_value__
+
   def make(module, params, opts \\ [])
   def make(module, params, opts) when is_atom(module) do
     make(make_struct_instance(module), collect_types(module), params, opts)
+  end
+  def make(types, params, opts) when is_map(types) do
+    cast_params(types, params, opts)
   end
   def make(struct, _params, _opts) do
     raise Struct.Error, "undefined struct #{inspect struct}"
@@ -10,8 +15,8 @@ defmodule Struct.Cast do
   @doc false
   defp collect_types(module) do
     try do
-      Enum.into(module.__schema__(:types), %{}, fn({k, _v}) ->
-        {k, module.__schema__(:type, k)}
+      Enum.into(module.__structure__(:types), %{}, fn({k, _v}) ->
+        {k, module.__structure__(:type, k)}
       end)
     rescue
       UndefinedFunctionError ->
@@ -31,23 +36,31 @@ defmodule Struct.Cast do
 
   @doc false
   defp make(%{__struct__: _module} = struct, types, params, opts) do
-    empty_values = Keyword.get(opts, :empty_values, [])
     make_map? = Keyword.get(opts, :make_map, false)
+
+    case cast_params(types, params, opts) do
+      {:ok, changes} ->
+        if make_map? do
+          {:ok, changes}
+        else
+          {:ok, apply_changes(struct, changes)}
+        end
+      {:error, errors} ->
+        {:error, errors}
+    end
+  end
+
+  defp cast_params(types, params, opts) do
+    empty_values = Keyword.get(opts, :empty_values, [])
     params = convert_params(params)
     permitted = Map.keys(types)
-    data = struct
 
     {changes, errors, valid?} =
       Enum.reduce(permitted, {%{}, %{}, true},
-                  &process_param(&1, params, types, data, empty_values, opts, &2))
+                  &process_param(&1, params, types, empty_values, opts, &2))
 
     if valid? do
-      changes = apply_changes(struct, changes)
-      if make_map? do
-        {:ok, Map.from_struct(changes)}
-      else
-        {:ok, changes}
-      end
+      {:ok, changes}
     else
       {:error, errors}
     end
@@ -72,24 +85,13 @@ defmodule Struct.Cast do
     end) || params
   end
 
-  defp process_param(key, params, types, data, empty_values, opts, {changes, errors, valid?}) do
+  defp process_param(key, params, types, empty_values, opts, {changes, errors, valid?}) do
     {key, param_key} = cast_key(key)
     {type, type_opts} = type!(types, key)
 
-    required? = Keyword.get(type_opts, :required, true)
-    current = Map.get(data, key)
-
-    case cast_field(key, param_key, type, type_opts, params, current, empty_values, opts, valid?) do
-      {:ok, value, valid?} ->
+    case cast_field(param_key, type, type_opts, params, empty_values, opts) do
+      {:ok, value} ->
         {Map.put(changes, key, value), errors, valid?}
-      :missing ->
-        if required? do
-          {changes, Map.put(errors, key, :missing), false}
-        else
-          {changes, errors, valid?}
-        end
-      :same ->
-        {changes, errors, valid?}
       {:error, reason} ->
         {changes, Map.put(errors, key, reason), false}
     end
@@ -97,10 +99,8 @@ defmodule Struct.Cast do
 
   defp type!(types, key) do
     case Map.fetch(types, key) do
-      {:ok, type} ->
-        type
-      :error ->
-        raise Struct.Error, "unknown field `#{key}`"
+      {:ok, type} -> type
+      :error -> raise Struct.Error, "unknown field `#{key}`"
     end
   end
 
@@ -110,35 +110,45 @@ defmodule Struct.Cast do
     rescue
       ArgumentError ->
         raise Struct.Error, "could not convert the parameter `#{key}` into an atom, " <>
-                            "`#{key}` is not a schema field"
+                            "`#{key}` is not a struct field"
     end
   end
   defp cast_key(key) when is_atom(key) do
     {key, Atom.to_string(key)}
   end
 
-  defp cast_field(_key, param_key, type, type_opts, params, current, empty_values, opts, valid?) do
+  defp cast_field(param_key, type, type_opts, params, empty_values, opts) do
+    default_value = Keyword.get(type_opts, :default, @default_value)
+
     case Map.fetch(params, param_key) do
+      {:ok, value} when default_value != @default_value and value == default_value ->
+        {:ok, value}
       {:ok, value} ->
-        case Struct.Type.cast(type, value, opts) do
-          {:ok, ^current} ->
-            :same
-          {:ok, value} ->
-            if value in empty_values do
-              :missing
-            else
-              {:ok, value, valid?}
-            end
-          {:error, reason} ->
-            {:error, reason}
-          :error ->
-            {:error, :invalid}
+        if value in empty_values do
+          {:error, :missing}
+        else
+          cast_field_value(type, value, empty_values, opts)
         end
       :error ->
         case Keyword.fetch(type_opts, :default) do
-          {:ok, value} -> {:ok, value, valid?}
-          :error -> :missing
+          {:ok, value} -> {:ok, value}
+          :error -> {:error, :missing}
         end
+    end
+  end
+
+  defp cast_field_value(type, value, empty_values, opts) do
+    case Struct.Type.cast(type, value, opts) do
+      {:ok, value} ->
+        if value in empty_values do
+          {:error, :missing}
+        else
+          {:ok, value}
+        end
+      {:error, reason} ->
+        {:error, reason}
+      :error ->
+        {:error, :invalid}
     end
   end
 

@@ -1,15 +1,12 @@
 defmodule Struct.Type do
-  @type t         :: primitive | custom
-  @type primitive :: base | composite
-  @type custom    :: atom
+  @type t       :: builtin | custom
+  @type custom  :: atom
+  @type builtin :: :integer | :float | :boolean | :string |
+                   :binary | :decimal | :utc_datetime |
+                   :naive_datetime | :date | :time | :any |
+                   {:array, t} | {:map, t}
 
-  @typep base      :: :integer | :float | :boolean | :string | :map |
-                      :binary | :decimal | :utc_datetime  |
-                      :naive_datetime | :date | :time | :any
-  @typep composite :: {:array, t} | {:map, t}
-
-  @base      ~w(integer float boolean string binary decimal datetime utc_datetime naive_datetime date time map any)a
-  @composite ~w(array map in)a
+  @builtin ~w(integer float boolean string binary decimal utc_datetime naive_datetime date time any array map)a
 
   @doc """
   Casts the given input to the custom type.
@@ -33,35 +30,9 @@ defmodule Struct.Type do
 
   """
   @spec primitive?(t) :: boolean
-  def primitive?({composite, _}) when composite in @composite, do: true
-  def primitive?(base) when base in @base, do: true
+  def primitive?({type, _}) when type in @builtin, do: true
+  def primitive?(type) when type in @builtin, do: true
   def primitive?(_), do: false
-
-  @doc """
-  Checks if the given atom can be used as composite type.
-
-      iex> composite?(:array)
-      true
-      iex> composite?(:string)
-      false
-
-  """
-  @spec composite?(atom) :: boolean
-  def composite?(atom), do: atom in @composite
-
-  @doc """
-  Checks if the given atom can be used as base type.
-
-      iex> base?(:string)
-      true
-      iex> base?(:array)
-      false
-      iex> base?(Custom)
-      false
-
-  """
-  @spec base?(atom) :: boolean
-  def base?(atom), do: atom in @base
 
   @doc """
   Casts a value to the given type.
@@ -200,18 +171,6 @@ defmodule Struct.Type do
     end
   end
 
-  def cast(types, term) when is_list(types) do
-    Enum.reduce(types, nil, fn
-      (_type, {:ok, term}) ->
-        {:ok, term}
-      (type, _acc) ->
-        case cast(type, term) do
-          {:ok, term} -> {:ok, term}
-          :error -> :error
-        end
-    end)
-  end
-
   def cast(type, term) do
     cond do
       not primitive?(type) ->
@@ -334,7 +293,6 @@ defmodule Struct.Type do
 
   # Checks if a value is of the given primitive type.
   defp of_base_type?(:any, _),           do: true
-  defp of_base_type?(:id, term),         do: is_integer(term)
   defp of_base_type?(:float, term),      do: is_float(term)
   defp of_base_type?(:integer, term),    do: is_integer(term)
   defp of_base_type?(:boolean, term),    do: is_boolean(term)

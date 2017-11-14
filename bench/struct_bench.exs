@@ -14,14 +14,14 @@ defmodule StructBench do
 
     structure do
       field :a
-      field :b, [:integer, :float]
-      field :c, {:map, [:string, :integer]}
+      field :b, :float
+      field :c, {:map, :integer}
       field :d, Embedded
     end
   end
 
   bench "complex" do
     {:ok, %Example{}} =
-      Example.make(%{a: "test", b: 1.42, c: %{a: "test", b: 42}, d: %{e: "embeds"}})
+      Example.make(%{a: "test", b: 1.42, c: %{a: 0, b: 42}, d: %{e: "embeds"}})
   end
 end

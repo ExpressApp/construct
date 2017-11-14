@@ -88,7 +88,7 @@ defmodule Struct do
     quoted =
       Enum.map(fields, fn({name, type, opts}) ->
         quote do
-          def __schema__(:type, unquote(name)) do
+          def __structure__(:type, unquote(name)) do
             {unquote(Macro.escape(type)), unquote(Macro.escape(opts))}
           end
         end
@@ -100,9 +100,9 @@ defmodule Struct do
       |> Macro.escape
 
     quote do
-      def __schema__(:types), do: unquote(types)
+      def __structure__(:types), do: unquote(types)
       unquote(quoted)
-      def __schema__(:type, _), do: nil
+      def __structure__(:type, _), do: nil
     end
   end
 
