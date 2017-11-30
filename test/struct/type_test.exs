@@ -68,6 +68,8 @@ defmodule Struct.TypeTest do
           == Type.cast({:array, :string}, ["a", "b"])
       assert :error
           == Type.cast({:array, :string}, [1, 2])
+      assert :error
+          == Type.cast({:array, :string}, nil)
     end
 
     test "{:array, CustomTypeReason}" do
@@ -75,6 +77,10 @@ defmodule Struct.TypeTest do
           == Type.cast({:array, CustomTypeReason}, [%{a: 1}, %{b: 2}])
       assert {:error, :empty_map}
           == Type.cast({:array, CustomTypeReason}, [%{a: 1}, %{}])
+      assert {:ok, [nil, nil]}
+          == Type.cast({:array, CustomTypeReason}, [nil, nil])
+      assert :error
+          == Type.cast({:array, CustomTypeReason}, nil)
     end
 
     test "{:map, :string}" do
@@ -82,6 +88,10 @@ defmodule Struct.TypeTest do
           == Type.cast({:map, :string}, %{a: "test"})
       assert :error
           == Type.cast({:map, :string}, %{a: :test})
+      assert :error
+          == Type.cast({:map, :string}, %{a: nil})
+      assert :error
+          == Type.cast({:map, :string}, nil)
     end
 
     test "{:map, CustomTypeReason}" do
@@ -89,6 +99,10 @@ defmodule Struct.TypeTest do
           == Type.cast({:map, CustomTypeReason}, %{a: %{b: 1}})
       assert {:error, :empty_map}
           == Type.cast({:map, CustomTypeReason}, %{a: %{}})
+      assert {:ok, %{a: nil}}
+          == Type.cast({:map, CustomTypeReason}, %{a: nil})
+      assert :error
+          == Type.cast({:map, CustomTypeReason}, nil)
     end
 
     test ":float" do
@@ -96,6 +110,8 @@ defmodule Struct.TypeTest do
           == Type.cast(:float, "1.42")
       assert {:ok, 1.0}
           == Type.cast(:float, 1)
+      assert :error
+          == Type.cast(:float, nil)
     end
 
     test ":boolean" do
@@ -107,11 +123,15 @@ defmodule Struct.TypeTest do
           == Type.cast(:boolean, "0")
       assert {:ok, false}
           == Type.cast(:boolean, "false")
+      assert :error
+          == Type.cast(:boolean, nil)
     end
 
     test ":integer" do
       assert {:ok, 42}
           == Type.cast(:integer, "42")
+      assert :error
+          == Type.cast(:integer, nil)
     end
 
     test ":decimal" do
@@ -123,6 +143,8 @@ defmodule Struct.TypeTest do
           == Type.cast(:decimal, 1)
       assert {:ok, Decimal.new("1")}
           == Type.cast(:decimal, Decimal.new("1"))
+      assert :error
+          == Type.cast(:decimal, nil)
     end
 
     @date ~D[2015-12-31]
