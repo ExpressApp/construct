@@ -251,6 +251,9 @@ defmodule Struct.Type do
 
   ## Naive datetime
 
+  defp cast_naive_datetime(nil) do
+    :error
+  end
   defp cast_naive_datetime(binary) when is_binary(binary) do
     case NaiveDateTime.from_iso8601(binary) do
       {:ok, _} = ok -> ok

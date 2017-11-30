@@ -196,6 +196,8 @@ defmodule Struct.TypeTest do
           == Type.cast(:date, @date)
       assert :error
           == Type.cast(:date, ~T[12:23:34])
+      assert :error
+          == Type.cast(:date, nil)
     end
 
     @time ~T[23:50:07]
@@ -249,6 +251,8 @@ defmodule Struct.TypeTest do
           == Type.cast(:time, ~N[2016-11-11 23:30:10])
       assert :error
           == Type.cast(:time, ~D[2016-11-11])
+      assert :error
+          == Type.cast(:time, nil)
     end
 
     @datetime ~N[2015-01-23 23:50:07]
@@ -308,6 +312,8 @@ defmodule Struct.TypeTest do
           == Type.cast(:naive_datetime, DateTime.from_unix!(10, :seconds))
       assert :error
           == Type.cast(:naive_datetime, @time)
+      assert :error
+          == Type.cast(:naive_datetime, nil)
     end
 
     @datetime DateTime.from_unix!(1422057007, :seconds)
@@ -365,6 +371,8 @@ defmodule Struct.TypeTest do
           == Type.cast(:utc_datetime, %{year: 2015, month: 1, day: 23, hour: 23, minute: nil})
       assert :error
           == Type.cast(:utc_datetime, ~T[12:23:34])
+      assert :error
+          == Type.cast(:utc_datetime, nil)
     end
   end
 end
