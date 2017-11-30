@@ -10,7 +10,7 @@ defmodule Struct do
       def make!(params \\ %{}, opts \\ []) do
         case make(params, opts) do
           {:ok, struct} -> struct
-          {:error, reason} -> raise Struct.MakeError, reason
+          {:error, reason} -> raise Struct.MakeError, %{reason: reason, params: params}
         end
       end
 

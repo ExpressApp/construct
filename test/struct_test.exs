@@ -237,8 +237,20 @@ defmodule StructTest do
     end
 
     test "MakeError" do
-      assert_raise(Struct.MakeError, "%{name: :missing}", fn ->
+      assert_raise(Struct.MakeError, ~s(%{name: {:missing, nil}}), fn ->
         Data.make!(%{})
+      end)
+
+      assert_raise(Struct.MakeError, ~s(%{nested: %{a: {:invalid, nil}, b: {:invalid_custom_list, "qwe"}}}), fn ->
+        InPlaceNested.make!(%{nested: %{a: nil, b: "qwe"}})
+      end)
+
+      assert_raise(Struct.MakeError, ~s(%{nested: %{a: {:invalid, nil}}}), fn ->
+        InPlaceNested.make!(%{nested: %{a: nil, b: []}})
+      end)
+
+      assert_raise(Struct.MakeError, ~s(%{embeddeds: %{a: {:invalid, [nil, 1.1]}, b: {:invalid, [:qwe, 1.1]}}}), fn ->
+        Data.make!(%{name: "", embeddeds: [%{a: nil, b: :qwe}, %{a: 1.1, b: 1.1}]})
       end)
     end
 
