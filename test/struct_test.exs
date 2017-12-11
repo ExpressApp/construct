@@ -97,6 +97,15 @@ defmodule StructTest do
     end
   end
 
+  defmodule Include do
+    use Struct
+
+    structure do
+      include Data
+      include InPlaceNestedWithOpts
+    end
+  end
+
   describe "creates when" do
     test "params are valid" do
       assert {:ok, %Data{name: "test", age: 10}}
@@ -173,6 +182,13 @@ defmodule StructTest do
 
     test "with opts" do
       assert {:ok, %{a: "what"}} == StructWithOpts.make(%{a: "what"})
+    end
+
+    test "include" do
+      map_fields = fn(struct) -> struct |> Map.from_struct |> Map.keys end
+
+      assert Enum.sort(map_fields.(%Include{}))
+          == Enum.sort(map_fields.(%Data{}) ++ map_fields.(%InPlaceNestedWithOpts{}))
     end
   end
 

@@ -40,6 +40,18 @@ defmodule Struct do
     end
   end
 
+  defmacro include(module) do
+    quote do
+      included_module = unquote(module)
+      type_defs = included_module.__structure__(:types)
+
+      Enum.each(type_defs, fn({name, _type}) ->
+        {type, opts} = included_module.__structure__(:type, name)
+        Struct.__field__(__MODULE__, name, type, opts)
+      end)
+    end
+  end
+
   defmacro field(name, definition \\ :string, opts \\ [])
   defmacro field(name, opts, [do: _] = contents) do
     __make_nested_field__(name, contents, opts)
