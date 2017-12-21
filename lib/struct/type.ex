@@ -1,17 +1,19 @@
 defmodule Struct.Type do
-  @type t       :: builtin | custom
+  @type t       :: builtin | custom | list(builtin) | list(custom)
   @type custom  :: atom
   @type builtin :: :integer | :float | :boolean | :string |
                    :binary | :decimal | :utc_datetime |
                    :naive_datetime | :date | :time | :any |
                    {:array, t} | {:map, t}
 
+  @type cast_ret :: {:ok, term} | {:error, term} | :error
+
   @builtin ~w(integer float boolean string binary decimal utc_datetime naive_datetime date time any array map)a
 
   @doc """
   Casts the given input to the custom type.
   """
-  @callback cast(term) :: {:ok, term} | :error
+  @callback cast(term) :: cast_ret
 
   ## Functions
 
@@ -94,7 +96,7 @@ defmodule Struct.Type do
       :error
 
   """
-  @spec cast(t, term, [make_map: :boolean]) :: {:ok, term} | :error
+  @spec cast(t, term, [make_map: :boolean]) :: cast_ret
 
   def cast({:array, type}, term, opts) when is_list(term) do
     array(term, type, &cast/3, [], opts)
@@ -121,7 +123,15 @@ defmodule Struct.Type do
     cast(type, term)
   end
 
-  @spec cast(t, term) :: {:ok, term} | :error
+  @spec cast(t, term) :: cast_ret
+
+  def cast(types, term) when is_list(types) do
+    Enum.reduce(types, {:ok, term}, fn
+      (type, {:ok, term}) -> cast(type, term)
+      (_, ret) -> ret
+    end)
+  end
+
   def cast({:array, type}, term) when is_list(term) do
     array(term, type, &cast/3, [], [])
   end

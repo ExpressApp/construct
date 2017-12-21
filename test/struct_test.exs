@@ -106,6 +106,21 @@ defmodule StructTest do
     end
   end
 
+  defmodule CommaList do
+    def cast(""), do: {:ok, []}
+    def cast(v) when is_binary(v), do: {:ok, String.split(v, ",")}
+    def cast(v) when is_list(v), do: {:ok, v}
+    def cast(_), do: :error
+  end
+
+  defmodule ListOfTypes do
+    use Struct
+
+    structure do
+      field :keys, [CommaList, {:array, :integer}], default: []
+    end
+  end
+
   describe "creates when" do
     test "params are valid" do
       assert {:ok, %Data{name: "test", age: 10}}
@@ -190,6 +205,21 @@ defmodule StructTest do
       assert Enum.sort(map_fields.(%Include{}))
           == Enum.sort(map_fields.(%Data{}) ++ map_fields.(%InPlaceNestedWithOpts{}))
     end
+
+    test "list of types" do
+      assert {:ok, %ListOfTypes{keys: [1, 2, 3]}}
+          == ListOfTypes.make(%{keys: "1,2,3"})
+      assert {:ok, %ListOfTypes{keys: [1]}}
+          == ListOfTypes.make(%{keys: "1"})
+      assert {:ok, %ListOfTypes{keys: [1, 2, 3]}}
+          == ListOfTypes.make(%{keys: ["1", "2", "3"]})
+      assert {:ok, %ListOfTypes{keys: [1, 2, 3]}}
+          == ListOfTypes.make(%{keys: [1, 2, 3]})
+      assert {:ok, %ListOfTypes{keys: []}}
+          == ListOfTypes.make(%{keys: []})
+      assert {:ok, %ListOfTypes{keys: []}}
+          == ListOfTypes.make(%{keys: ""})
+    end
   end
 
   describe "error when" do
@@ -216,6 +246,14 @@ defmodule StructTest do
     test "passed value in empty_values" do
       assert {:error, %{a: :missing}} == StructWithOpts.make(%{a: nil})
       assert {:error, %{a: :missing}} == StructWithOpts.make(%{a: ""})
+    end
+
+    test "list of types" do
+      assert {:error, %{keys: :invalid}} == ListOfTypes.make(%{keys: "abc"})
+      assert {:error, %{keys: :invalid}} == ListOfTypes.make(%{keys: "a,b,c"})
+      assert {:error, %{keys: :invalid}} == ListOfTypes.make(%{keys: :qwe})
+      assert {:error, %{keys: :invalid}} == ListOfTypes.make(%{keys: ["a", "b"]})
+      assert {:error, %{keys: :invalid}} == ListOfTypes.make(%{keys: [:qwe, 1, "2"]})
     end
 
     test "tries to pass map with mixed keys type" do

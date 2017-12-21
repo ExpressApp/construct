@@ -149,6 +149,9 @@ defmodule Struct.Cast do
         {:error, reason}
       :error ->
         {:error, :invalid}
+      any ->
+        raise Struct.CastError, "expected #{inspect(type)} to return {:ok, term} | {:error, term} | :error, " <>
+                                "got an unexpected value: `#{inspect(any)}`"
     end
   end
 
