@@ -42,11 +42,20 @@ defmodule Struct do
 
   defmacro include(module) do
     quote do
-      included_module = unquote(module)
-      type_defs = included_module.__structure__(:types)
+      module = unquote(module)
+
+      unless Code.ensure_compiled?(module) do
+        raise Struct.DefinitionError, "undefined module #{module}"
+      end
+
+      unless function_exported?(module, :__structure__, 1) do
+        raise Struct.DefinitionError, "provided #{module} is not Struct module"
+      end
+
+      type_defs = module.__structure__(:types)
 
       Enum.each(type_defs, fn({name, _type}) ->
-        {type, opts} = included_module.__structure__(:type, name)
+        {type, opts} = module.__structure__(:type, name)
         Struct.__field__(__MODULE__, name, type, opts)
       end)
     end
@@ -66,6 +75,8 @@ defmodule Struct do
   end
 
   defp __make_nested_field__(name, contents, opts) do
+    check_field_name!(name)
+
     nested_module_name = String.to_atom(Macro.camelize(Atom.to_string(name)))
 
     quote do
@@ -120,7 +131,8 @@ defmodule Struct do
 
   @doc false
   def __field__(mod, name, type, opts) do
-    check_type!(name, type)
+    check_field_name!(name)
+    check_type!(type)
 
     Module.put_attribute(mod, :fields, {name, type, opts})
     Module.put_attribute(mod, :struct_fields, {name, default_for_struct(opts)})
@@ -130,14 +142,43 @@ defmodule Struct do
     check_default!(Keyword.get(opts, :default))
   end
 
-  defp check_type!(_name, _type) do
-    :ok
+  defp check_type!({:array, type}) do
+    unless Struct.Type.primitive?(type), do: check_type_complex!(type)
+  end
+  defp check_type!({:map, type}) do
+    unless Struct.Type.primitive?(type), do: check_type_complex!(type)
+  end
+  defp check_type!({complex, _}) do
+    raise Struct.DefinitionError, "undefined complex type #{inspect(complex)}"
+  end
+  defp check_type!(type_list) when is_list(type_list) do
+    Enum.each(type_list, &check_type!/1)
+  end
+  defp check_type!(type) do
+    unless Struct.Type.primitive?(type), do: check_type_complex!(type)
   end
 
-  def check_default!(default) when is_function(default) do
+  defp check_type_complex!(module) do
+    unless Code.ensure_compiled?(module) do
+      raise Struct.DefinitionError, "undefined module #{module}"
+    end
+
+    unless function_exported?(module, :cast, 1) do
+      raise Struct.DefinitionError, "undefined function cast/1 for #{module}"
+    end
+  end
+
+  defp check_field_name!(name) when is_atom(name) do
+    :ok
+  end
+  defp check_field_name!(name) do
+    raise Struct.DefinitionError, "expected atom for field name, got `#{inspect(name)}`"
+  end
+
+  defp check_default!(default) when is_function(default) do
     raise Struct.DefinitionError, "default value cannot to be a function"
   end
-  def check_default!(default) do
+  defp check_default!(default) do
     default
   end
 end

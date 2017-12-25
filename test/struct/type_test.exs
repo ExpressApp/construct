@@ -1,57 +1,21 @@
 defmodule Struct.TypeTest do
-  use ExUnit.Case
+  use Struct.TestCase
 
   alias Struct.Type
 
-  defmodule CustomStruct do
-    def cast(params) when params == %{} do
-      :error
-    end
-    def cast(params) do
-      {:ok, params}
-    end
-  end
-
-  defmodule CustomStruct2 do
-    def cast(params) do
-      {:ok, Map.merge(params, %{custom_struct: 2})}
-    end
-  end
-
-  defmodule CustomType do
-    def cast(nil) do
-      :error
-    end
-    def cast(%{}) do
-      :error
-    end
-    def cast(term) do
-      {:ok, term}
-    end
-  end
-
-  defmodule CustomTypeReason do
-    def cast(term) when map_size(term) == 0 do
-      {:error, :empty_map}
-    end
-    def cast(term) do
-      {:ok, term}
-    end
-  end
-
   describe "#cast" do
-    test "CustomStruct" do
-      assert {:ok, :a}
-          == Type.cast(CustomStruct, :a)
-      assert :error
-          == Type.cast(CustomStruct, %{})
+    test "CustomType" do
+      assert {:ok, []}
+          == Type.cast(CustomType, [])
+      assert {:error, :invalid_custom_list}
+          == Type.cast(CustomType, %{})
     end
 
-    test "CustomType" do
-      assert {:ok, :a}
-          == Type.cast(CustomType, :a)
+    test "EctoType" do
+      assert {:ok, []}
+          == Type.cast(EctoType, [])
       assert :error
-          == Type.cast(CustomType, %{})
+          == Type.cast(EctoType, %{})
     end
 
     test "nil" do
@@ -59,7 +23,7 @@ defmodule Struct.TypeTest do
           == Type.cast(:any, nil)
       assert :error
           == Type.cast(:integer, nil)
-      assert :error
+      assert {:error, :invalid_custom_list}
           == Type.cast(CustomType, nil)
     end
 
@@ -72,15 +36,13 @@ defmodule Struct.TypeTest do
           == Type.cast({:array, :string}, nil)
     end
 
-    test "{:array, CustomTypeReason}" do
-      assert {:ok, [%{a: 1}, %{b: 2}]}
-          == Type.cast({:array, CustomTypeReason}, [%{a: 1}, %{b: 2}])
-      assert {:error, :empty_map}
-          == Type.cast({:array, CustomTypeReason}, [%{a: 1}, %{}])
-      assert {:ok, [nil, nil]}
-          == Type.cast({:array, CustomTypeReason}, [nil, nil])
+    test "{:array, CustomType}" do
+      assert {:ok, [[1], [2]]}
+          == Type.cast({:array, CustomType}, [[1], [2]])
+      assert {:error, :invalid_custom_list}
+          == Type.cast({:array, CustomType}, [nil, nil])
       assert :error
-          == Type.cast({:array, CustomTypeReason}, nil)
+          == Type.cast({:array, CustomType}, nil)
     end
 
     test "{:map, :string}" do
@@ -94,15 +56,32 @@ defmodule Struct.TypeTest do
           == Type.cast({:map, :string}, nil)
     end
 
-    test "{:map, CustomTypeReason}" do
-      assert {:ok, %{a: %{b: 1}}}
-          == Type.cast({:map, CustomTypeReason}, %{a: %{b: 1}})
-      assert {:error, :empty_map}
-          == Type.cast({:map, CustomTypeReason}, %{a: %{}})
-      assert {:ok, %{a: nil}}
-          == Type.cast({:map, CustomTypeReason}, %{a: nil})
+    test "{:map, CustomType}" do
+      assert {:ok, %{a: [[], []]}}
+          == Type.cast({:map, CustomType}, %{a: [[], []]})
+      assert {:error, :invalid_custom_list}
+          == Type.cast({:map, CustomType}, %{a: nil})
       assert :error
-          == Type.cast({:map, CustomTypeReason}, nil)
+          == Type.cast({:map, CustomType}, nil)
+    end
+
+    test "[CommaList, {:array, :integer}]" do
+      assert {:ok, [1, 2, 3]}
+          == Type.cast([CommaList, {:array, :integer}], "1,2,3")
+      assert {:ok, [1]}
+          == Type.cast([CommaList, {:array, :integer}], "1")
+      assert :error
+          == Type.cast([CommaList, {:array, :integer}], "a,b,c")
+      assert :error
+          == Type.cast([CommaList, {:array, :integer}], "a")
+      assert {:ok, [1, 2, 3]}
+          == Type.cast([CommaList, {:array, :integer}], ["1", "2", "3"])
+      assert :error
+          == Type.cast([CommaList, {:array, :integer}], ["a", "b", "c"])
+      assert {:ok, []}
+          == Type.cast([CommaList, {:array, :integer}], [])
+      assert {:ok, []}
+          == Type.cast([CommaList, {:array, :integer}], "")
     end
 
     test ":float" do

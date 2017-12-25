@@ -2,15 +2,14 @@ defmodule Struct.Error do
   defexception [:message]
 end
 
-defmodule Struct.CastError do
-  defexception [:message]
-end
-
 defmodule Struct.MakeError do
   defexception [:message]
 
   def exception(%{reason: reason, params: params}) when is_map(reason) do
     %__MODULE__{message: inspect(traverse_errors(reason, params))}
+  end
+  def exception(reason) when is_binary(reason) do
+    %__MODULE__{message: reason}
   end
   def exception(reason) do
     %__MODULE__{message: inspect(reason)}

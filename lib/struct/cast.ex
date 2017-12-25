@@ -76,7 +76,7 @@ defmodule Struct.Cast do
         nil
 
       ({key, _value}, _) when is_binary(key) ->
-        raise Struct.CastError, "expected params to be a map with atoms or string keys, " <>
+        raise Struct.MakeError, "expected params to be a map with atoms or string keys, " <>
                                 "got a map with mixed keys: #{inspect params}"
 
       ({key, value}, acc) when is_atom(key) ->
@@ -150,7 +150,7 @@ defmodule Struct.Cast do
       :error ->
         {:error, :invalid}
       any ->
-        raise Struct.CastError, "expected #{inspect(type)} to return {:ok, term} | {:error, term} | :error, " <>
+        raise Struct.MakeError, "expected #{inspect(type)} to return {:ok, term} | {:error, term} | :error, " <>
                                 "got an unexpected value: `#{inspect(any)}`"
     end
   end
