@@ -1,4 +1,4 @@
-defmodule Struct.Type do
+defmodule Construct.Type do
   @moduledoc """
   Type-coercion module, originally copied and modified from
   [Ecto.Type](https://github.com/elixir-ecto/ecto/blob/master/lib/ecto/type.ex)
@@ -7,7 +7,7 @@ defmodule Struct.Type do
   ## Defining custom types
 
       defmodule CustomType do
-        @behaviour Struct.Type
+        @behaviour Construct.Type
 
         def cast(value) do
           {:ok, value}
@@ -16,7 +16,7 @@ defmodule Struct.Type do
   """
 
   @type t       :: builtin | custom | list(builtin | custom)
-  @type custom  :: atom | Struct.t
+  @type custom  :: atom | Construct.t
   @type builtin :: :integer | :float | :boolean | :string |
                    :binary | :decimal | :utc_datetime |
                    :naive_datetime | :date | :time | :any |

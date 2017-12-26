@@ -1,9 +1,9 @@
-defmodule Struct.TestCase do
+defmodule Construct.TestCase do
   use ExUnit.CaseTemplate
 
   using do
     quote do
-      import Struct.TestCase
+      import Construct.TestCase
 
       def make({:module, _, _, _} = mod, params, opts \\ []) do
         name(mod).make(params, opts)
@@ -19,15 +19,15 @@ defmodule Struct.TestCase do
     end
   end
 
-  defmacro create_struct([do: block]) do
-    __create_struct__([], block)
+  defmacro create_construct([do: block]) do
+    __create_construct__([], block)
   end
 
-  defmacro create_struct(opts, [do: block]) do
-    __create_struct__(opts, block)
+  defmacro create_construct(opts, [do: block]) do
+    __create_construct__(opts, block)
   end
 
-  def __create_struct__(opts, block) do
+  def __create_construct__(opts, block) do
     quote do
       # retrieve module name from test case and line
       name = __ENV__.module
@@ -36,7 +36,7 @@ defmodule Struct.TestCase do
       module_name = :"#{name}_#{line}"
 
       defmodule module_name do
-        use Struct, unquote(opts)
+        use Construct, unquote(opts)
 
         structure do
           unquote(block)

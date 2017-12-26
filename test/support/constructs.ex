@@ -1,5 +1,5 @@
 defmodule User do
-  use Struct
+  use Construct
 
   structure do
     field :name

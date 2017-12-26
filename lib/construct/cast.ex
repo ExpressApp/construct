@@ -1,21 +1,21 @@
-defmodule Struct.Cast do
+defmodule Construct.Cast do
   @moduledoc """
-  Module to make struct instance from provided params.
+  Module to make structure instance from provided params.
 
-  You can use it standalone, without defining struct, by providing types and params to `make/3`.
+  You can use it standalone, without defining structure, by providing types and params to `make/3`.
   """
 
-  @default_value :__struct_no_default_value__
+  @default_value :__construct_no_default_value__
 
-  @type type :: {Struct.Type.t, Keyword.t}
+  @type type :: {Construct.Type.t, Keyword.t}
   @type types :: %{required(atom) => type}
   @type options :: [make_map: boolean, empty_values: list(term)]
 
   @doc """
-  Function to compose struct instance from params:
+  Function to compose structure instance from params:
 
       defmodule User do
-        use Struct
+        use Construct
 
         structure do
           field :name
@@ -42,7 +42,7 @@ defmodule Struct.Cast do
 
   Options:
 
-    * `make_map` — return result as map instead of struct, defaults to false;
+    * `make_map` — return result as map instead of structure, defaults to false;
     * `empty_values` — list of terms indicates empty values, defaults to [].
 
   Example of `empty_values`:
@@ -53,7 +53,7 @@ defmodule Struct.Cast do
       iex> make(%{name: {:string, []}}, %{name: "john"}, empty_values: ["john"])
       {:error, %{name: :missing}}
   """
-  @spec make(atom | types, map, options) :: {:ok, struct} | {:error, term}
+  @spec make(atom | types, map, options) :: {:ok, Construct.t | map} | {:error, term}
   def make(struct_or_types, params, opts \\ [])
   def make(module, params, opts) when is_atom(module) do
     make(make_struct_instance(module), collect_types(module), params, opts)
@@ -61,8 +61,8 @@ defmodule Struct.Cast do
   def make(types, params, opts) when is_map(types) do
     cast_params(types, params, opts)
   end
-  def make(struct, _params, _opts) do
-    raise Struct.Error, "undefined struct #{inspect struct}"
+  def make(structure, _params, _opts) do
+    raise Construct.Error, "undefined structure #{inspect(structure)}"
   end
 
   @doc false
@@ -73,7 +73,7 @@ defmodule Struct.Cast do
       end)
     rescue
       UndefinedFunctionError ->
-        raise Struct.Error, "invalid struct #{inspect module}"
+        raise Construct.Error, "invalid structure #{inspect(module)}"
     end
   end
 
@@ -83,7 +83,7 @@ defmodule Struct.Cast do
       module.__struct__
     rescue
       UndefinedFunctionError ->
-        raise Struct.Error, "undefined struct #{inspect module}, it is not defined or does not exist"
+        raise Construct.Error, "undefined structure #{inspect(module)}, it is not defined or does not exist"
     end
   end
 
@@ -129,8 +129,8 @@ defmodule Struct.Cast do
         nil
 
       ({key, _value}, _) when is_binary(key) ->
-        raise Struct.MakeError, "expected params to be a map with atoms or string keys, " <>
-                                "got a map with mixed keys: #{inspect params}"
+        raise Construct.MakeError, "expected params to be a map with atoms or string keys, " <>
+                                   "got a map with mixed keys: #{inspect(params)}"
 
       ({key, value}, acc) when is_atom(key) ->
         Map.put(acc || %{}, Atom.to_string(key), value)
@@ -153,7 +153,7 @@ defmodule Struct.Cast do
   defp type!(types, key) do
     case Map.fetch(types, key) do
       {:ok, type} -> type
-      :error -> raise Struct.Error, "unknown field `#{key}`"
+      :error -> raise Construct.Error, "unknown field `#{key}`"
     end
   end
 
@@ -162,8 +162,8 @@ defmodule Struct.Cast do
       {String.to_existing_atom(key), key}
     rescue
       ArgumentError ->
-        raise Struct.Error, "could not convert the parameter `#{key}` into an atom, " <>
-                            "`#{key}` is not a struct field"
+        raise Construct.Error, "could not convert the parameter `#{key}` into an atom, " <>
+                               "`#{key}` is not a structure field"
     end
   end
   defp cast_key(key) when is_atom(key) do
@@ -191,7 +191,7 @@ defmodule Struct.Cast do
   end
 
   defp cast_field_value(type, value, empty_values, opts) do
-    case Struct.Type.cast(type, value, opts) do
+    case Construct.Type.cast(type, value, opts) do
       {:ok, value} ->
         if value in empty_values do
           {:error, :missing}
@@ -203,8 +203,8 @@ defmodule Struct.Cast do
       :error ->
         {:error, :invalid}
       any ->
-        raise Struct.MakeError, "expected #{inspect(type)} to return {:ok, term} | {:error, term} | :error, " <>
-                                "got an unexpected value: `#{inspect(any)}`"
+        raise Construct.MakeError, "expected #{inspect(type)} to return {:ok, term} | {:error, term} | :error, " <>
+                                   "got an unexpected value: `#{inspect(any)}`"
     end
   end
 

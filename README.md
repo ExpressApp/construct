@@ -1,4 +1,4 @@
-# Struct [![Build Status](https://img.shields.io/travis/ExpressApp/struct.svg)](https://travis-ci.org/ExpressApp/struct) [![Hex.pm](https://img.shields.io/hexpm/v/struct.svg)](https://hex.pm/packages/struct)
+# Construct [![Build Status](https://img.shields.io/travis/ExpressApp/construct.svg)](https://travis-ci.org/ExpressApp/construct) [![Hex.pm](https://img.shields.io/hexpm/v/construct.svg)](https://hex.pm/packages/construct)
 
 ---
 
@@ -8,29 +8,29 @@ Library for dealing with data structures
 
 ## Installation
 
-1. Add `struct` to your list of dependencies in `mix.exs`:
+1. Add `construct` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:struct, "~> 1.0.0"}]
+  [{:construct, "~> 1.0.0"}]
 end
 ```
 
-2. Ensure `struct` is started before your application:
+2. Ensure `construct` is started before your application:
 
 ```elixir
 def application do
-  [applications: [:struct]]
+  [applications: [:construct]]
 end
 ```
 
 ## Usage
 
-Suppose you have some user input from several sources (DB, HTTP request, WebSocket), and you will need to process that data into something type-validated, like User entity. With this library you can define a type-validated struct for this entity:
+Suppose you have some user input from several sources (DB, HTTP request, WebSocket), and you will need to process that data into something type-validated, like User entity. With this library you can define a type-validated structure for this entity:
 
 ```elixir
 defmodule User do
-  use Struct
+  use Construct
 
   structure do
     field :name
@@ -50,7 +50,7 @@ Pretty neat, yeah? But what if you need more complex type? We have a solution!
 
 ```elixir
 defmodule Answer do
-  @behaviour Struct.Type
+  @behaviour Construct.Type
 
   def cast("yes"), do: {:ok, true}
   def cast("no"), do: {:ok, false}
@@ -58,11 +58,11 @@ defmodule Answer do
 end
 ```
 
-And use it in your struct like this:
+And use it in your structure like this:
 
 ```elixir
 defmodule Quiz do
-  use Struct
+  use Construct
 
   structure do
     field :user_id, :integer
@@ -80,7 +80,7 @@ What if we need to parse 'optimized' query string from URL, like list of user id
 
 ```elixir
 defmodule CommaList do
-  @behaviour Struct.Type
+  @behaviour Construct.Type
 
   def cast(""), do: {:ok, []}
   def cast(v) when is_binary(v), do: {:ok, String.split(v, ",")}
@@ -89,7 +89,7 @@ defmodule CommaList do
 end
 
 defmodule SearchFilterRequest do
-  use Struct
+  use Construct
 
   structure do
     field :user_ids, [CommaList, {:array, :integer}], default: []
@@ -115,7 +115,7 @@ You can use already defined structures as types:
 
 ```elixir
 defmodule Comment do
-  use Struct
+  use Construct
 
   structure do
     field :text
@@ -123,7 +123,7 @@ defmodule Comment do
 end
 
 defmodule Post do
-  use Struct
+  use Construct
 
   structure do
     field :title
@@ -135,11 +135,11 @@ iex> Post.make(%{title: "Some article", comments: [%{"text" => "cool!"}, %{text:
 {:ok, %Post{comments: [%Comment{text: "cool!"}, %Comment{text: "awesome!!!"}], title: "Some article"}}
 ```
 
-And include repeated fields in structs:
+And include repeated fields in structures:
 
 ```elixir
 defmodule PK do
-  use Struct
+  use Construct
 
   structure do
     field :primary_key, :integer
@@ -147,7 +147,7 @@ defmodule PK do
 end
 
 defmodule Timestamps do
-  use Struct
+  use Construct
 
   structure do
     field :inserted_at, :utc_datetime
@@ -156,7 +156,7 @@ defmodule Timestamps do
 end
 
 defmodule User do
-  use Struct
+  use Construct
 
   structure do
     include PK
@@ -198,7 +198,7 @@ You can use Ecto custom types like Ecto.UUID or implement by yourself:
 
 ```elixir
 defmodule CustomType do
-  @behaviour Struct.Type
+  @behaviour Construct.Type
 
   @spec cast(term) :: {:ok, term} | {:error, term} | :error
   def cast(value) do
@@ -207,13 +207,13 @@ defmodule CustomType do
 end
 ```
 
-Notice that `cast/1` can return error with reason, this behaviour is supported only by Struct and you can't use types defined using Struct in Ecto schemas.
+Notice that `cast/1` can return error with reason, this behaviour is supported only by Struct and you can't use types defined using Construct in Ecto schemas.
 
-## Struct definition
+## Construct definition
 
 ```elixir
 defmodule User do
-  use Struct, struct_opts
+  use Construct, struct_opts
 
   structure do
     include module_name
@@ -227,7 +227,7 @@ end
 
 Where:
 
-* `use Struct, struct_opts` where:
+* `use Construct, struct_opts` where:
   * `struct_opts` — options passed to every `make/2` and `make!/2` calls as default options;
 * `include module_name` where:
   * `module_name` — is struct module, that validates for existence in compile time;
@@ -236,9 +236,9 @@ Where:
   * `type` — primitive or custom type, that validates for existence in compile time;
   * `field_opts`.
 
-## Errors while making structs
+## Errors while making structures
 
-When you provide invalid data to your structs you can get tuple with errors:
+When you provide invalid data to your structures you can get tuple with errors:
 
 ```elixir
 iex> Post.make
@@ -255,15 +255,15 @@ Or receive an exception with invalid data:
 
 ```elixir
 iex> Post.make!
-** (Struct.MakeError) %{comments: {:missing, nil}, title: {:missing, nil}}
+** (Construct.MakeError) %{comments: {:missing, nil}, title: {:missing, nil}}
     iex:10: Post.make!/2
 
 iex> Post.make!(%{comments: %{}, title: :test})
-** (Struct.MakeError) %{comments: {:invalid, %{}}, title: {:invalid, :test}}
+** (Construct.MakeError) %{comments: {:invalid, %{}}, title: {:invalid, :test}}
     iex:10: Post.make!/2
 
 iex> Post.make!(%{comments: [%{}], title: "what the title?"})
-** (Struct.MakeError) %{comments: %{text: {:missing, [nil]}}}
+** (Construct.MakeError) %{comments: %{text: {:missing, [nil]}}}
     iex:10: Post.make!/2
 ```
 
