@@ -3,6 +3,8 @@ defmodule Struct.TypeTest do
 
   alias Struct.Type
 
+  doctest Struct.Type, import: true
+
   describe "#cast" do
     test "CustomType" do
       assert {:ok, []}

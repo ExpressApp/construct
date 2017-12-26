@@ -1,7 +1,60 @@
 defmodule Struct.Cast do
+  @moduledoc """
+  Module to make struct instance from provided params.
+
+  You can use it standalone, without defining struct, by providing types and params to `make/3`.
+  """
+
   @default_value :__struct_no_default_value__
 
-  def make(module, params, opts \\ [])
+  @type type :: {Struct.Type.t, Keyword.t}
+  @type types :: %{required(atom) => type}
+  @type options :: [make_map: boolean, empty_values: list(term)]
+
+  @doc """
+  Function to compose struct instance from params:
+
+      defmodule User do
+        use Struct
+
+        structure do
+          field :name
+        end
+      end
+
+      iex> make(User, %{name: "john doe"})
+      {:ok, %User{name: "john doe"}}
+
+  Also you can use it as standalone complex type-coercion by providing types and params:
+
+      iex> make(%{name: {:string, []}}, %{"name" => "john doe"})
+      {:ok, %{name: "john doe"}}
+
+      iex> make(%{age: {:integer, [default: 18]}}, %{"age" => "42"})
+      {:ok, %{age: 42}}
+
+      iex> make(%{age: {:integer, [default: 18]}}, %{})
+      {:ok, %{age: 18}}
+
+      iex> types = %{title: {:string, []}, comments: {{:array, :string}, default: []}}
+      iex> make(types, %{title: "article", comments: ["awesome", "great!", "whoa!"]})
+      {:ok, %{title: "article", comments: ["awesome", "great!", "whoa!"]}}
+
+  Options:
+
+    * `make_map` — return result as map instead of struct, defaults to false;
+    * `empty_values` — list of terms indicates empty values, defaults to [].
+
+  Example of `empty_values`:
+
+      iex> make(%{name: {:string, []}}, %{name: ""}, empty_values: [""])
+      {:error, %{name: :missing}}
+
+      iex> make(%{name: {:string, []}}, %{name: "john"}, empty_values: ["john"])
+      {:error, %{name: :missing}}
+  """
+  @spec make(atom | types, map, options) :: {:ok, struct} | {:error, term}
+  def make(struct_or_types, params, opts \\ [])
   def make(module, params, opts) when is_atom(module) do
     make(make_struct_instance(module), collect_types(module), params, opts)
   end
@@ -27,10 +80,10 @@ defmodule Struct.Cast do
   @doc false
   defp make_struct_instance(module) do
     try do
-      module.__struct__()
+      module.__struct__
     rescue
       UndefinedFunctionError ->
-        raise Struct.Error, "invalid struct #{inspect module}"
+        raise Struct.Error, "undefined struct #{inspect module}, it is not defined or does not exist"
     end
   end
 
