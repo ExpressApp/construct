@@ -1,29 +1,29 @@
-defmodule Struct do
+defmodule Construct do
   @moduledoc """
-  Struct internally divided into three components:
+  Construct internally divided into three components:
 
-    * `Struct` — defining structs;
-    * `Struct.Cast` — making struct instances;
-    * `Struct.Type` — type-coercion and custom type behaviour.
+    * `Construct` — defining structures;
+    * `Construct.Cast` — making structure instances;
+    * `Construct.Type` — type-coercion and custom type behaviour.
 
-  ## Struct definition
+  ## Construct definition
 
       defmodule StructureName do
-        use Struct, struct_opts
+        use Construct, struct_opts
 
         structure do
-          include AnotherStruct
+          include AnotherStructure
           field name, type, options
         end
       end
 
-  `struct_opts` is options passed to `c:make/2` and `c:make!/2`, described in `Struct.Cast.make/3`.
+  `struct_opts` is options passed to `c:make/2` and `c:make!/2`, described in `Construct.Cast.make/3`.
 
-  When you type `use Struct` — library bootstrapped few functions with `Struct` behaviour:
+  When you type `use Construct` — library bootstrapped few functions with `Construct` behaviour:
 
-    * `c:make/2` — just an alias to `Struct.Cast.make/3`;
-    * `c:make!/2` — alias to `c:make/2` but throws `Struct.MakeError` exception if provided params are invalid;
-    * `c:cast/2` — alias to `c:make/2` too, for follow `Struct.Type` behaviour and use defined struct as type.
+    * `c:make/2` — just an alias to `Construct.Cast.make/3`;
+    * `c:make!/2` — alias to `c:make/2` but throws `Construct.MakeError` exception if provided params are invalid;
+    * `c:cast/2` — alias to `c:make/2` too, for follow `Construct.Type` behaviour and use defined structure as type.
   """
 
   @type t :: struct
@@ -31,18 +31,18 @@ defmodule Struct do
   @doc false
   defmacro __using__(opts \\ []) do
     quote do
-      @behaviour Struct
+      @behaviour Construct
 
-      import Struct, only: [structure: 1]
+      import Construct, only: [structure: 1]
 
       def make(params \\ %{}, opts \\ []) do
-        Struct.Cast.make(__MODULE__, params, Keyword.merge(opts, unquote(opts)))
+        Construct.Cast.make(__MODULE__, params, Keyword.merge(opts, unquote(opts)))
       end
 
       def make!(params \\ %{}, opts \\ []) do
         case make(params, opts) do
-          {:ok, struct} -> struct
-          {:error, reason} -> raise Struct.MakeError, %{reason: reason, params: params}
+          {:ok, structure} -> structure
+          {:error, reason} -> raise Construct.MakeError, %{reason: reason, params: params}
         end
       end
 
@@ -59,19 +59,19 @@ defmodule Struct do
   """
   defmacro structure([do: block]) do
     quote do
-      import Struct
+      import Construct
 
       Module.register_attribute(__MODULE__, :fields, accumulate: true)
-      Module.register_attribute(__MODULE__, :struct_fields, accumulate: true)
+      Module.register_attribute(__MODULE__, :construct_fields, accumulate: true)
 
       unquote(block)
 
-      struct_fields = Enum.reverse(@struct_fields)
+      construct_fields = Enum.reverse(@construct_fields)
       fields = Enum.reverse(@fields)
 
       Module.eval_quoted __ENV__, [
-        Struct.__defstruct__(struct_fields),
-        Struct.__types__(fields)]
+        Construct.__defstruct__(construct_fields),
+        Construct.__types__(fields)]
     end
   end
 
@@ -87,18 +87,18 @@ defmodule Struct do
       module = unquote(struct)
 
       unless Code.ensure_compiled?(module) do
-        raise Struct.DefinitionError, "undefined module #{module}"
+        raise Construct.DefinitionError, "undefined module #{module}"
       end
 
       unless function_exported?(module, :__structure__, 1) do
-        raise Struct.DefinitionError, "provided #{module} is not Struct module"
+        raise Construct.DefinitionError, "provided #{module} is not Construct module"
       end
 
       type_defs = module.__structure__(:types)
 
       Enum.each(type_defs, fn({name, _type}) ->
         {type, opts} = module.__structure__(:type, name)
-        Struct.__field__(__MODULE__, name, type, opts)
+        Construct.__field__(__MODULE__, name, type, opts)
       end)
     end
   end
@@ -107,9 +107,9 @@ defmodule Struct do
   Defines field on the structure with given name, type and options.
 
   Checks definition validity at compile time by name, type and options.
-  For custom types checks for module existence and `c:Struct.Type.cast/1` callback.
+  For custom types checks for module existence and `c:Construct.Type.cast/1` callback.
 
-  If field definition is invalid for some reason — it throws an `Struct.DefinitionError`
+  If field definition is invalid for some reason — it throws an `Construct.DefinitionError`
   exception with detailed reason.
 
   ## Options
@@ -117,18 +117,18 @@ defmodule Struct do
     * `:default` — sets default value for that field:
 
       * The default value is calculated at compilation time, so don't use expressions like
-        DateTime.utc_now or Ecto.UUID.generate as they would then be the same for all structs;
+        DateTime.utc_now or Ecto.UUID.generate as they would then be the same for all structures;
 
       * Value from params is compared with default value before and after type cast;
 
       * If you pass `field :a, type, default: nil` and `make(%{a: nil})` — type coercion will
-        not be used, `nil` compares with default value and just appends that value to struct;
+        not be used, `nil` compares with default value and just appends that value to structure;
 
       * If field doesn't exist in params, it will use default value.
 
       By default this option is unset. Notice that you can't use functions as a default value.
   """
-  @spec field(atom, Struct.Type.t, Keyword.t) :: :ok
+  @spec field(atom, Construct.Type.t, Keyword.t) :: :ok
   defmacro field(name, type \\ :string, opts \\ [])
   defmacro field(name, opts, [do: _] = contents) do
     __make_nested_field__(name, contents, opts)
@@ -138,24 +138,24 @@ defmodule Struct do
   end
   defmacro field(name, type, opts) do
     quote do
-      Struct.__field__(__MODULE__, unquote(name), unquote(type), unquote(opts))
+      Construct.__field__(__MODULE__, unquote(name), unquote(type), unquote(opts))
     end
   end
 
   @doc """
-  Alias to `Struct.Cast.make/3`.
+  Alias to `Construct.Cast.make/3`.
   """
   @callback make(params :: map, opts :: Keyword.t) :: {:ok, t} | {:error, term}
 
   @doc """
-  Alias to `c:make/2`, but raises an `Struct.MakeError` exception if params have errors.
+  Alias to `c:make/2`, but raises an `Construct.MakeError` exception if params have errors.
   """
   @callback make!(params :: map, opts :: Keyword.t) :: {:ok, t} | {:error, term}
 
   @doc """
-  Alias to `c:make/2`, used to follow `c:Struct.Type.cast/1` callback.
+  Alias to `c:make/2`, used to follow `c:Construct.Type.cast/1` callback.
 
-  To use this struct as custom type.
+  To use this structure as custom type.
   """
   @callback cast(params :: map, opts :: Keyword.t) :: {:ok, t} | {:error, term}
 
@@ -176,18 +176,18 @@ defmodule Struct do
         |> Macro.expand(__ENV__)
 
       defmodule current_module_ast do
-        use Struct
+        use Construct
         structure do: unquote(contents)
       end
 
-      Struct.__field__(__MODULE__, unquote(name), current_module_ast, unquote(opts))
+      Construct.__field__(__MODULE__, unquote(name), current_module_ast, unquote(opts))
     end
   end
 
   @doc false
-  def __defstruct__(struct_fields) do
+  def __defstruct__(construct_fields) do
     quote do
-      defstruct unquote(Macro.escape(struct_fields))
+      defstruct unquote(Macro.escape(construct_fields))
     end
   end
 
@@ -220,7 +220,7 @@ defmodule Struct do
     check_type!(type)
 
     Module.put_attribute(mod, :fields, {name, type, opts})
-    Module.put_attribute(mod, :struct_fields, {name, default_for_struct(opts)})
+    Module.put_attribute(mod, :construct_fields, {name, default_for_struct(opts)})
   end
 
   defp default_for_struct(opts) do
@@ -228,28 +228,28 @@ defmodule Struct do
   end
 
   defp check_type!({:array, type}) do
-    unless Struct.Type.primitive?(type), do: check_type_complex!(type)
+    unless Construct.Type.primitive?(type), do: check_type_complex!(type)
   end
   defp check_type!({:map, type}) do
-    unless Struct.Type.primitive?(type), do: check_type_complex!(type)
+    unless Construct.Type.primitive?(type), do: check_type_complex!(type)
   end
   defp check_type!({complex, _}) do
-    raise Struct.DefinitionError, "undefined complex type #{inspect(complex)}"
+    raise Construct.DefinitionError, "undefined complex type #{inspect(complex)}"
   end
   defp check_type!(type_list) when is_list(type_list) do
     Enum.each(type_list, &check_type!/1)
   end
   defp check_type!(type) do
-    unless Struct.Type.primitive?(type), do: check_type_complex!(type)
+    unless Construct.Type.primitive?(type), do: check_type_complex!(type)
   end
 
   defp check_type_complex!(module) do
     unless Code.ensure_compiled?(module) do
-      raise Struct.DefinitionError, "undefined module #{module}"
+      raise Construct.DefinitionError, "undefined module #{module}"
     end
 
     unless function_exported?(module, :cast, 1) do
-      raise Struct.DefinitionError, "undefined function cast/1 for #{module}"
+      raise Construct.DefinitionError, "undefined function cast/1 for #{module}"
     end
   end
 
@@ -257,11 +257,11 @@ defmodule Struct do
     :ok
   end
   defp check_field_name!(name) do
-    raise Struct.DefinitionError, "expected atom for field name, got `#{inspect(name)}`"
+    raise Construct.DefinitionError, "expected atom for field name, got `#{inspect(name)}`"
   end
 
   defp check_default!(default) when is_function(default) do
-    raise Struct.DefinitionError, "default value cannot to be a function"
+    raise Construct.DefinitionError, "default value cannot to be a function"
   end
   defp check_default!(default) do
     default

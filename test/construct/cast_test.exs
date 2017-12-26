@@ -1,12 +1,12 @@
-defmodule Struct.CastTest do
+defmodule Construct.CastTest do
   use ExUnit.Case
 
-  alias Struct.Cast
+  alias Construct.Cast
 
-  doctest Struct.Cast, import: true
+  doctest Construct.Cast, import: true
 
   defmodule Valid do
-    use Struct
+    use Construct
 
     structure do
       field :a
@@ -22,7 +22,7 @@ defmodule Struct.CastTest do
 
   describe "#make(module, params, opts)" do
     test "returns structure" do
-      assert {:ok, %Struct.CastTest.Valid{a: "test"}} == Cast.make(Valid, %{a: "test"})
+      assert {:ok, %Construct.CastTest.Valid{a: "test"}} == Cast.make(Valid, %{a: "test"})
     end
 
     test "returns map with `make_map: true`" do
@@ -30,19 +30,19 @@ defmodule Struct.CastTest do
     end
 
     test "throws error with invalid module" do
-      assert_raise(Struct.Error, ~s(undefined struct Struct.CastTest.Invalid, it is not defined or does not exist), fn ->
+      assert_raise(Construct.Error, ~s(undefined structure Construct.CastTest.Invalid, it is not defined or does not exist), fn ->
         Cast.make(Invalid, %{})
       end)
     end
 
     test "throws error with invalid structure" do
-      assert_raise(Struct.Error, ~s(invalid struct Struct.CastTest.InvalidStructure), fn ->
+      assert_raise(Construct.Error, ~s(invalid structure Construct.CastTest.InvalidStructure), fn ->
         Cast.make(InvalidStructure, %{})
       end)
     end
 
-    test "throws error with invalid param as struct module" do
-      assert_raise(Struct.Error, ~s(undefined struct "some"), fn ->
+    test "throws error with invalid param as structure module" do
+      assert_raise(Construct.Error, ~s(undefined structure "some"), fn ->
         Cast.make("some", %{})
       end)
     end

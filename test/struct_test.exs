@@ -1,5 +1,5 @@
-defmodule StructTest do
+defmodule ConstructTest do
   use ExUnit.Case
 
-  doctest Struct
+  doctest Construct
 end

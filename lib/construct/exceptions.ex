@@ -1,8 +1,8 @@
-defmodule Struct.Error do
+defmodule Construct.Error do
   defexception [:message]
 end
 
-defmodule Struct.MakeError do
+defmodule Construct.MakeError do
   defexception [:message]
 
   @spec exception(struct_error | String.t | term) :: struct
@@ -34,6 +34,6 @@ defmodule Struct.MakeError do
   end
 end
 
-defmodule Struct.DefinitionError do
+defmodule Construct.DefinitionError do
   defexception [:message]
 end

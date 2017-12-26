@@ -1,9 +1,9 @@
-defmodule Struct.TypeTest do
-  use Struct.TestCase
+defmodule Construct.TypeTest do
+  use Construct.TestCase
 
-  alias Struct.Type
+  alias Construct.Type
 
-  doctest Struct.Type, import: true
+  doctest Construct.Type, import: true
 
   describe "#cast" do
     test "CustomType" do

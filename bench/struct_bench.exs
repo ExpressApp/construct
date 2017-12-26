@@ -2,7 +2,7 @@ defmodule StructBench do
   use Benchfella
 
   defmodule Embedded do
-    use Struct
+    use Construct
 
     structure do
       field :e
@@ -10,7 +10,7 @@ defmodule StructBench do
   end
 
   defmodule Example do
-    use Struct
+    use Construct
 
     structure do
       field :a

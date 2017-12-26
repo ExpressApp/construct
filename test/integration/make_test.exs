@@ -1,8 +1,8 @@
-defmodule Struct.Integration.MakeTest do
-  use Struct.TestCase
+defmodule Construct.Integration.MakeTest do
+  use Construct.TestCase
 
   test "with simple stupid params" do
-    module = create_struct do
+    module = create_construct do
       field :key
     end
 
@@ -10,7 +10,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "with params made from self" do
-    module = create_struct do
+    module = create_construct do
       field :key
     end
 
@@ -19,7 +19,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "field with type `{:array, t}`" do
-    module = create_struct do
+    module = create_construct do
       field :key, {:array, :string}
     end
 
@@ -27,7 +27,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "field with type `{:map, t}`" do
-    module = create_struct do
+    module = create_construct do
       field :key, {:map, :string}
     end
 
@@ -36,7 +36,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "field with type `any`" do
-    module = create_struct do
+    module = create_construct do
       field :key, :any
     end
 
@@ -45,15 +45,15 @@ defmodule Struct.Integration.MakeTest do
     assert {:ok, %{key: 1234}} = make(module, %{key: 1234})
   end
 
-  test "field with embedded struct" do
-    embedded_module = create_struct do
+  test "field with embedded structure" do
+    embedded_module = create_construct do
       field :a, :integer
       field :b, {:array, :float}
     end
 
     embedded = name(embedded_module)
 
-    module = create_struct do
+    module = create_construct do
       field :emb, embedded
     end
 
@@ -65,7 +65,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "field without default value" do
-    module = create_struct do
+    module = create_construct do
       field :key, :string
     end
 
@@ -75,7 +75,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "field with default value `nil`" do
-    module = create_struct do
+    module = create_construct do
       field :key, :string, default: nil
     end
 
@@ -85,7 +85,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "field with default value `%{}`" do
-    module = create_struct do
+    module = create_construct do
       field :key, :map, default: %{}
     end
 
@@ -94,8 +94,8 @@ defmodule Struct.Integration.MakeTest do
     assert {:ok, %{key: %{}}} = make(module, %{key: %{}})
   end
 
-  test "field with custom type (Struct.Type, when error may have reason)" do
-    module = create_struct do
+  test "field with custom type (Construct.Type, when error may have reason)" do
+    module = create_construct do
       field :key, CustomType
     end
 
@@ -105,7 +105,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "field with custom type (Ecto.Type)" do
-    module = create_struct do
+    module = create_construct do
       field :key, EctoType
     end
 
@@ -115,7 +115,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "field with custom type and default value `nil`" do
-    module = create_struct do
+    module = create_construct do
       field :key, CustomType, default: nil
     end
 
@@ -125,7 +125,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "field with custom type and default value `[]`" do
-    module = create_struct do
+    module = create_construct do
       field :key, CustomType, default: []
     end
 
@@ -134,8 +134,8 @@ defmodule Struct.Integration.MakeTest do
     assert {:ok, %{key: []}} = make(module, %{key: []})
   end
 
-  test "field with in place nested struct" do
-    module = create_struct do
+  test "field with in place nested structure" do
+    module = create_construct do
       field :a do
         field :b
       end
@@ -147,7 +147,7 @@ defmodule Struct.Integration.MakeTest do
   test "make with `empty_values` option" do
     opts = [empty_values: [nil, "", "test", 1.42]]
 
-    module = create_struct do
+    module = create_construct do
       field :key, :string
     end
 
@@ -159,7 +159,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "make with `make_map: false` option" do
-    module = create_struct do
+    module = create_construct do
       field :key
     end
 
@@ -168,7 +168,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "make with `make_map: true` option" do
-    module = create_struct do
+    module = create_construct do
       field :key
     end
 
@@ -177,12 +177,12 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "structure with `include`" do
-    include1_module = create_struct do
+    include1_module = create_construct do
       field :a
       field :b
     end
 
-    include2_module = create_struct do
+    include2_module = create_construct do
       field :c
       field :d
     end
@@ -190,7 +190,7 @@ defmodule Struct.Integration.MakeTest do
     include1 = name(include1_module)
     include2 = name(include2_module)
 
-    module = create_struct do
+    module = create_construct do
       include include1
       include include2
     end
@@ -199,7 +199,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "field with `[CommaList, {:array, :integer}]` type" do
-    module = create_struct do
+    module = create_construct do
       field :key, [CommaList, {:array, :integer}]
     end
 
@@ -214,7 +214,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "field with `[CommaList, {:array, :integer}]` type and default `nil`" do
-    module = create_struct do
+    module = create_construct do
       field :key, [CommaList, {:array, :integer}], default: nil
     end
 
@@ -225,7 +225,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "field with `[CommaList, {:array, :integer}]` type and default `[]`" do
-    module = create_struct do
+    module = create_construct do
       field :key, [CommaList, {:array, :integer}], default: []
     end
 
@@ -236,7 +236,7 @@ defmodule Struct.Integration.MakeTest do
   end
 
   test "raise when try to provide mixed key types as params" do
-    module = create_struct do
+    module = create_construct do
       field :a
       field :b
     end
@@ -244,26 +244,26 @@ defmodule Struct.Integration.MakeTest do
     message = "expected params to be a map with atoms or string keys, " <>
               "got a map with mixed keys: %{:b => \"10\", \"a\" => \"john\"}"
 
-    assert_raise(Struct.MakeError, message, fn ->
+    assert_raise(Construct.MakeError, message, fn ->
       make(module, %{"a" => "john", b: "10"})
     end)
   end
 
   test "raise when custom type returns unacceptable" do
-    module = create_struct do
+    module = create_construct do
       field :key, CustomTypeInvalid
     end
 
     message = "expected CustomTypeInvalid to return {:ok, term} | {:error, term} | :error, " <>
               "got an unexpected value: `:invalid_ret`"
 
-    assert_raise(Struct.MakeError, message, fn ->
+    assert_raise(Construct.MakeError, message, fn ->
       make(module, %{key: "test"})
     end)
   end
 
   test "using make!" do
-    module = create_struct do
+    module = create_construct do
       field :a
       field :b do
         field :c, :integer
@@ -274,27 +274,27 @@ defmodule Struct.Integration.MakeTest do
 
     assert %{a: "a", b: %{c: 1}} = make!(module, %{a: "a", b: %{c: "1"}})
 
-    assert_raise(Struct.MakeError, ~s(%{a: {:missing, nil}, b: {:missing, nil}}), fn ->
+    assert_raise(Construct.MakeError, ~s(%{a: {:missing, nil}, b: {:missing, nil}}), fn ->
       make!(module, %{})
     end)
 
-    assert_raise(Struct.MakeError, ~s(%{b: {:missing, nil}}), fn ->
+    assert_raise(Construct.MakeError, ~s(%{b: {:missing, nil}}), fn ->
       make!(module, %{a: "a"})
     end)
 
-    assert_raise(Struct.MakeError, ~s(%{b: %{c: {:missing, nil}}}), fn ->
+    assert_raise(Construct.MakeError, ~s(%{b: %{c: {:missing, nil}}}), fn ->
       make!(module, %{a: "a", b: %{}})
     end)
 
-    assert_raise(Struct.MakeError, ~s(%{b: %{c: {:invalid, \"a\"}}}), fn ->
+    assert_raise(Construct.MakeError, ~s(%{b: %{c: {:invalid, \"a\"}}}), fn ->
       make!(module, %{a: "a", b: %{c: "a"}})
     end)
 
-    assert_raise(Struct.MakeError, ~s(%{b: %{d: {:invalid, [\"a\", \"1\", :test]}}}), fn ->
+    assert_raise(Construct.MakeError, ~s(%{b: %{d: {:invalid, [\"a\", \"1\", :test]}}}), fn ->
       make!(module, %{a: "a", b: %{c: "1", d: ["a", "1", :test]}})
     end)
 
-    assert_raise(Struct.MakeError, ~s(%{b: %{e: {:invalid_custom_list, \"test\"}}}), fn ->
+    assert_raise(Construct.MakeError, ~s(%{b: %{e: {:invalid_custom_list, \"test\"}}}), fn ->
       make!(module, %{a: "a", b: %{c: "1", e: "test"}})
     end)
   end

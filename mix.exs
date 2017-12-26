@@ -1,8 +1,8 @@
-defmodule Struct.Mixfile do
+defmodule Construct.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :struct,
+    [app: :construct,
      version: "1.0.0",
      elixir: "~> 1.3",
      deps: deps(),
@@ -14,7 +14,7 @@ defmodule Struct.Mixfile do
      package: package(),
 
      # Docs
-     name: "Struct",
+     name: "Construct",
      docs: docs()]
   end
 
@@ -43,18 +43,18 @@ defmodule Struct.Mixfile do
 
   defp package do
     [
-      name: :struct,
+      name: :construct,
       files: ["lib", "mix.exs"],
       maintainers: ["Yuri Artemev", "Alexander Malaev"],
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/ExpressApp/struct"}
+      links: %{"GitHub" => "https://github.com/ExpressApp/construct"}
     ]
   end
 
   defp docs do
     [
       main: "readme",
-      source_url: "https://github.com/ExpressApp/struct",
+      source_url: "https://github.com/ExpressApp/construct",
       extras: ["README.md"]
     ]
   end
