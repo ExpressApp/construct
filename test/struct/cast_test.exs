@@ -3,6 +3,8 @@ defmodule Struct.CastTest do
 
   alias Struct.Cast
 
+  doctest Struct.Cast, import: true
+
   defmodule Valid do
     use Struct
 
@@ -28,7 +30,7 @@ defmodule Struct.CastTest do
     end
 
     test "throws error with invalid module" do
-      assert_raise(Struct.Error, ~s(invalid struct Struct.CastTest.Invalid), fn ->
+      assert_raise(Struct.Error, ~s(undefined struct Struct.CastTest.Invalid, it is not defined or does not exist), fn ->
         Cast.make(Invalid, %{})
       end)
     end

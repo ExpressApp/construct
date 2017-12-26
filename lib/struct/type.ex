@@ -1,6 +1,22 @@
 defmodule Struct.Type do
-  @type t       :: builtin | custom | list(builtin) | list(custom)
-  @type custom  :: atom
+  @moduledoc """
+  Type-coercion module, originally copied and modified from
+  [Ecto.Type](https://github.com/elixir-ecto/ecto/blob/master/lib/ecto/type.ex)
+  and behaviour to implement your own types.
+
+  ## Defining custom types
+
+      defmodule CustomType do
+        @behaviour Struct.Type
+
+        def cast(value) do
+          {:ok, value}
+        end
+      end
+  """
+
+  @type t       :: builtin | custom | list(builtin | custom)
+  @type custom  :: atom | Struct.t
   @type builtin :: :integer | :float | :boolean | :string |
                    :binary | :decimal | :utc_datetime |
                    :naive_datetime | :date | :time | :any |
@@ -30,6 +46,8 @@ defmodule Struct.Type do
       iex> primitive?({:array, Another})
       true
 
+      iex> primitive?([Another, {:array, :integer}])
+      false
   """
   @spec primitive?(t) :: boolean
   def primitive?({type, _}) when type in @builtin, do: true
@@ -45,7 +63,7 @@ defmodule Struct.Type do
       iex> cast(:any, nil)
       {:ok, nil}
       iex> cast(:string, nil)
-      {:ok, nil}
+      :error
 
       iex> cast(:integer, 1)
       {:ok, 1}
@@ -85,6 +103,10 @@ defmodule Struct.Type do
       {:ok, Decimal.new(1.0)}
       iex> cast(:decimal, Decimal.new("1.0"))
       {:ok, Decimal.new(1.0)}
+      iex> cast(:decimal, 1.0)
+      {:ok, Decimal.new(1.0)}
+      iex> cast(:decimal, "1.0")
+      {:ok, Decimal.new(1.0)}
 
       iex> cast({:array, :integer}, [1, 2, 3])
       {:ok, [1, 2, 3]}
@@ -96,7 +118,8 @@ defmodule Struct.Type do
       :error
 
   """
-  @spec cast(t, term, [make_map: :boolean]) :: cast_ret
+  @spec cast(t, term, options) :: cast_ret
+    when options: [make_map: boolean]
 
   def cast({:array, type}, term, opts) when is_list(term) do
     array(term, type, &cast/3, [], opts)
@@ -123,7 +146,12 @@ defmodule Struct.Type do
     cast(type, term)
   end
 
+  @doc """
+  Behaves like `cast/3`, but without options provided to nested types.
+  """
   @spec cast(t, term) :: cast_ret
+
+  def cast(type, term)
 
   def cast(types, term) when is_list(types) do
     Enum.reduce(types, {:ok, term}, fn

@@ -5,6 +5,8 @@ end
 defmodule Struct.MakeError do
   defexception [:message]
 
+  @spec exception(struct_error | String.t | term) :: struct
+    when struct_error: %{reason: map, params: map}
   def exception(%{reason: reason, params: params}) when is_map(reason) do
     %__MODULE__{message: inspect(traverse_errors(reason, params))}
   end

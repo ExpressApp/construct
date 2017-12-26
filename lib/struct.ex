@@ -1,6 +1,38 @@
 defmodule Struct do
+  @moduledoc """
+  Struct internally divided into three components:
+
+    * `Struct` — defining structs;
+    * `Struct.Cast` — making struct instances;
+    * `Struct.Type` — type-coercion and custom type behaviour.
+
+  ## Struct definition
+
+      defmodule StructureName do
+        use Struct, struct_opts
+
+        structure do
+          include AnotherStruct
+          field name, type, options
+        end
+      end
+
+  `struct_opts` is options passed to `c:make/2` and `c:make!/2`, described in `Struct.Cast.make/3`.
+
+  When you type `use Struct` — library bootstrapped few functions with `Struct` behaviour:
+
+    * `c:make/2` — just an alias to `Struct.Cast.make/3`;
+    * `c:make!/2` — alias to `c:make/2` but throws `Struct.MakeError` exception if provided params are invalid;
+    * `c:cast/2` — alias to `c:make/2` too, for follow `Struct.Type` behaviour and use defined struct as type.
+  """
+
+  @type t :: struct
+
+  @doc false
   defmacro __using__(opts \\ []) do
     quote do
+      @behaviour Struct
+
       import Struct, only: [structure: 1]
 
       def make(params \\ %{}, opts \\ []) do
@@ -22,6 +54,9 @@ defmodule Struct do
     end
   end
 
+  @doc """
+  Defines a structure.
+  """
   defmacro structure([do: block]) do
     quote do
       import Struct
@@ -40,9 +75,16 @@ defmodule Struct do
     end
   end
 
-  defmacro include(module) do
+  @doc """
+  Includes provided structure and checks definition for validity at compile-time.
+
+  If included structure is invalid for some reason — this macro throws an
+  `Struct.DefinitionError` exception with detailed reason.
+  """
+  @spec include(t) :: :ok
+  defmacro include(struct) do
     quote do
-      module = unquote(module)
+      module = unquote(struct)
 
       unless Code.ensure_compiled?(module) do
         raise Struct.DefinitionError, "undefined module #{module}"
@@ -61,7 +103,33 @@ defmodule Struct do
     end
   end
 
-  defmacro field(name, definition \\ :string, opts \\ [])
+  @doc """
+  Defines field on the structure with given name, type and options.
+
+  Checks definition validity at compile time by name, type and options.
+  For custom types checks for module existence and `c:Struct.Type.cast/1` callback.
+
+  If field definition is invalid for some reason — it throws an `Struct.DefinitionError`
+  exception with detailed reason.
+
+  ## Options
+
+    * `:default` — sets default value for that field:
+
+      * The default value is calculated at compilation time, so don't use expressions like
+        DateTime.utc_now or Ecto.UUID.generate as they would then be the same for all structs;
+
+      * Value from params is compared with default value before and after type cast;
+
+      * If you pass `field :a, type, default: nil` and `make(%{a: nil})` — type coercion will
+        not be used, `nil` compares with default value and just appends that value to struct;
+
+      * If field doesn't exist in params, it will use default value.
+
+      By default this option is unset. Notice that you can't use functions as a default value.
+  """
+  @spec field(atom, Struct.Type.t, Keyword.t) :: :ok
+  defmacro field(name, type \\ :string, opts \\ [])
   defmacro field(name, opts, [do: _] = contents) do
     __make_nested_field__(name, contents, opts)
   end
@@ -73,6 +141,23 @@ defmodule Struct do
       Struct.__field__(__MODULE__, unquote(name), unquote(type), unquote(opts))
     end
   end
+
+  @doc """
+  Alias to `Struct.Cast.make/3`.
+  """
+  @callback make(params :: map, opts :: Keyword.t) :: {:ok, t} | {:error, term}
+
+  @doc """
+  Alias to `c:make/2`, but raises an `Struct.MakeError` exception if params have errors.
+  """
+  @callback make!(params :: map, opts :: Keyword.t) :: {:ok, t} | {:error, term}
+
+  @doc """
+  Alias to `c:make/2`, used to follow `c:Struct.Type.cast/1` callback.
+
+  To use this struct as custom type.
+  """
+  @callback cast(params :: map, opts :: Keyword.t) :: {:ok, t} | {:error, term}
 
   defp __make_nested_field__(name, contents, opts) do
     check_field_name!(name)
@@ -138,7 +223,7 @@ defmodule Struct do
     Module.put_attribute(mod, :struct_fields, {name, default_for_struct(opts)})
   end
 
-  def default_for_struct(opts) do
+  defp default_for_struct(opts) do
     check_default!(Keyword.get(opts, :default))
   end
 
