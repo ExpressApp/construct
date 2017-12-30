@@ -8,6 +8,7 @@ defmodule Construct.Mixfile do
      deps: deps(),
      test_coverage: [tool: ExCoveralls],
      preferred_cli_env: preferred_cli_env(),
+     elixirc_paths: elixirc_paths(Mix.env),
 
      # Hex
      description: description(),
@@ -28,6 +29,9 @@ defmodule Construct.Mixfile do
      "coveralls.post": :test,
      "coveralls.html": :test]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 
   defp deps do
     [{:decimal, "~> 1.3.1", only: [:dev, :test]},
