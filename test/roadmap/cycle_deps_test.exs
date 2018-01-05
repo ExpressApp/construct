@@ -1,43 +1,56 @@
 defmodule Roadmap.CycleDepsTest do
   use ExUnit.Case
 
-  test "Compile self dependent module" do
-    defmodule User do
-      use Construct
-
-      structure do
-        field :id, :integer
-        field :name, :string
-        field :friend, Roadmap.CycleDepsTest.User, default: nil
-      end
-    end
-
-    :code.delete(Roadmap.CycleDepsTest.User)
+  test "Casting self-dependent module properly" do
+    assert {
+      :ok,
+      %Person{
+        friend: %Person{
+          friend: %Person{
+            friend: nil,
+            id: 3,
+            name: "Charlie"
+          },
+          id: 2,
+          name: "Bob"
+        },
+        id: 1,
+        name: "Alice"
+      }
+    } = Person.make(
+      %{
+        id: 1,
+        name: "Alice",
+        friend: %{
+          id: 2,
+          name: "Bob",
+          friend: %{
+            id: 3,
+            name: "Charlie"
+          }
+        }
+      }
+    )
   end
 
-  test "Compile cross-dependent modules" do
-    defmodule Post do
-      use Construct
-
-      structure do
-        field :id, :integer
-        field :name, :string
-        field :title, :string
-        field :comments, {:array, Roadmap.CycleDepsTest.Comment}, default: nil
-      end
-    end
-
-    defmodule Comment do
-      use Construct
-
-      structure do
-        field :id, :integer
-        field :title, :string
-        field :post, Roadmap.CycleDepsTest.Post, default: nil
-      end
-    end
-
-    :code.delete(Roadmap.CycleDepsTest.Comment)
-    :code.delete(Roadmap.CycleDepsTest.Post)
+  test "Casting cross-dependent modules properly" do
+    assert {
+      :ok,
+      %Post{
+        comments: [
+          %Comment{id: 2, post: nil},
+          %Comment{id: 3, post: %Post{comments: nil, id: 1}}
+        ],
+        id: 1
+      }
+    } = Post.make(
+      %{
+        id: 1,
+        comments: [
+          %{id: 2},
+          %{id: 3, post: %{id: 1}}
+        ]
+      }
+    )
   end
 end
