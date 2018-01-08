@@ -27,6 +27,7 @@ defmodule Construct do
   """
 
   @type t :: struct
+  @type_checker_name Construct.TypeRegistry
 
   @doc false
   defmacro __using__(opts \\ []) do
@@ -34,6 +35,8 @@ defmodule Construct do
       @behaviour Construct
 
       import Construct, only: [structure: 1]
+
+      @type t :: %__MODULE__{}
 
       def make(params \\ %{}, opts \\ []) do
         Construct.Cast.make(__MODULE__, params, Keyword.merge(opts, unquote(opts)))
@@ -62,9 +65,6 @@ defmodule Construct do
       import Construct
 
       Construct.__register_as_complex_type__(__MODULE__)
-
-      Module.register_attribute(__MODULE__, :required, accumulate: true)
-      Module.register_attribute(__MODULE__, :optional, accumulate: true)
 
       Module.register_attribute(__MODULE__, :fields, accumulate: true)
       Module.register_attribute(__MODULE__, :construct_fields, accumulate: true)
@@ -230,36 +230,13 @@ defmodule Construct do
   This function register module as a valid Construct type. This allows compile-time type checks
   """
   def __register_as_complex_type__(module) do
-    case Agent.start_link(fn -> MapSet.new end, name: Construct.TypeRegistry) do
+    case Agent.start(fn -> MapSet.new end, name: @type_checker_name) do
       {:ok, pid} -> pid
       {:error, {:already_started, pid}} -> pid
       _ -> raise Construct.DefinitionError, "unexpected compilation error"
     end
     |> Agent.update(&MapSet.put(&1, module))
   end
-
-  @doc """
-  Default can be a closure, that takes one argument - raw structure to be parsed
-
-  Example:
-
-      defmodule User do
-        use Construct
-
-        structure do
-          field :first_name, :string
-          field :last_name, :string
-          field :full_name, :string, default: fn %{"first_name" => fname, "last_name" => lname} -> fname<>" "<>lname end
-        end
-      end
-
-      iex> User.make(%{first_name: "John", "last_name" => "Doe"})
-      {:ok, %User{first_name: "John", last_name: "Doe", full_name: "John Doe"}}
-
-      iex> User.make(%{first_name: "John", "last_name" => "Doe", "full_name" => "Alice Brown"})
-      {:ok, %User{first_name: "John", last_name: "Doe", full_name: "Alice Brown"}}
-  """
-  defp default_for_struct(opts), do: Keyword.get(opts, :default)
 
   defp check_type!({:array, type}) do
     unless Construct.Type.primitive?(type), do: check_type_complex!(type)
@@ -278,39 +255,31 @@ defmodule Construct do
   end
 
   defp check_type_complex!(module) do
-    case Agent.get(Construct.TypeRegistry, &MapSet.member?(&1, module)) do
-      true -> :ok
-      _ ->
-        case Code.ensure_compiled?(module) do
-          false -> raise Construct.DefinitionError, "undefined module #{module}"
+    case Agent.start(fn -> MapSet.new end, name: @type_checker_name) do
+      {:ok, _} ->
+        raise Construct.DefinitionError, "type checker crashed unexpectedly"
+      {:error, {:already_started, _}} ->
+        case Agent.get(@type_checker_name, &MapSet.member?(&1, module)) do
+          true -> :ok
           _ ->
-            case function_exported?(module, :cast, 1) do
-              true -> :ok
-              _ -> raise Construct.DefinitionError, "undefined function cast/1 for #{module}"
+            case Code.ensure_compiled?(module) do
+              false -> raise Construct.DefinitionError, "undefined module #{module}"
+              _ ->
+                case function_exported?(module, :cast, 1) do
+                  true -> :ok
+                  _ -> raise Construct.DefinitionError, "undefined function cast/1 for #{module}"
+                end
             end
         end
+      _ -> raise Construct.DefinitionError, "unexpected compilation error"
     end
   end
 
   defp check_field_name!(name) when is_atom(name), do: :ok
   defp check_field_name!(name), do: raise Construct.DefinitionError, "expected atom for field name, got `#{inspect(name)}`"
 
-  ### --- Type generation --- ###
-  defp create_type_ast do
-    quote do
-      @type t :: unquote(fields_spec(fields))
-    end
-  end
+  defp default_for_struct(opts), do: check_default!(Keyword.get(opts, :default))
 
-  defp fields_spec(fields) do
-    fields_list = [
-      a: {:integer, [], Elixir},
-      b: {:boolean, [], Elixir}
-    ]
-
-    {:%, [], [
-      {:__MODULE__, [], Elixir},
-      {:%{}, [], fields_list}
-    ]}
-  end
+  defp check_default!(default) when is_function(default), do: raise Construct.DefinitionError, "default value cannot to be a function"
+  defp check_default!(default), do: default
 end

@@ -100,7 +100,6 @@ defmodule Construct.Integration.BuildTest do
     end)
   end
 
-  @tag :skip
   test "raise when trying to use function as default argument" do
     assert_raise(Construct.DefinitionError, ~s(default value cannot to be a function), fn ->
       defmodule M do
