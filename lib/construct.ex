@@ -64,6 +64,7 @@ defmodule Construct do
     quote do
       import Construct
 
+      Construct.__ensure_type_checker_started__()
       Construct.__register_as_complex_type__(__MODULE__)
 
       Module.register_attribute(__MODULE__, :fields, accumulate: true)
@@ -133,10 +134,10 @@ defmodule Construct do
   @spec field(atom, Construct.Type.t, Keyword.t) :: :ok
   defmacro field(name, type \\ :string, opts \\ [])
   defmacro field(name, opts, [do: _] = contents) do
-    __make_nested_field__(name, contents, opts)
+    make_nested_field(name, contents, opts)
   end
   defmacro field(name, [do: _] = contents, _opts) do
-    __make_nested_field__(name, contents, [])
+    make_nested_field(name, contents, [])
   end
   defmacro field(name, type, opts) do
     quote do
@@ -160,31 +161,6 @@ defmodule Construct do
   To use this structure as custom type.
   """
   @callback cast(params :: map, opts :: Keyword.t) :: {:ok, t} | {:error, term}
-
-  defp __make_nested_field__(name, contents, opts) do
-    check_field_name!(name)
-
-    nested_module_name = String.to_atom(Macro.camelize(Atom.to_string(name)))
-
-    quote do
-      current_module_name_ast =
-        __MODULE__
-        |> Atom.to_string()
-        |> String.split(".")
-        |> Enum.map(&String.to_atom/1)
-
-      current_module_ast =
-        {:__aliases__, [alias: false], current_module_name_ast ++ [unquote(nested_module_name)]}
-        |> Macro.expand(__ENV__)
-
-      defmodule current_module_ast do
-        use Construct
-        structure do: unquote(contents)
-      end
-
-      Construct.__field__(__MODULE__, unquote(name), current_module_ast, unquote(opts))
-    end
-  end
 
   @doc false
   def __defstruct__(construct_fields) do
@@ -225,17 +201,43 @@ defmodule Construct do
     Module.put_attribute(mod, :construct_fields, {name, default_for_struct(opts)})
   end
 
-
-  @doc """
-  This function register module as a valid Construct type. This allows compile-time type checks
-  """
-  def __register_as_complex_type__(module) do
+  @doc false
+  def __ensure_type_checker_started__ do
     case Agent.start(fn -> MapSet.new end, name: @type_checker_name) do
-      {:ok, pid} -> pid
-      {:error, {:already_started, pid}} -> pid
+      {:ok, _pid} -> :ok
+      {:error, {:already_started, _pid}} -> :ok
       _ -> raise Construct.DefinitionError, "unexpected compilation error"
     end
-    |> Agent.update(&MapSet.put(&1, module))
+  end
+
+  @doc false
+  def __register_as_complex_type__(module) do
+    Agent.update(@type_checker_name, &MapSet.put(&1, module))
+  end
+
+  defp make_nested_field(name, contents, opts) do
+    check_field_name!(name)
+
+    nested_module_name = String.to_atom(Macro.camelize(Atom.to_string(name)))
+
+    quote do
+      current_module_name_ast =
+        __MODULE__
+        |> Atom.to_string()
+        |> String.split(".")
+        |> Enum.map(&String.to_atom/1)
+
+      current_module_ast =
+        {:__aliases__, [alias: false], current_module_name_ast ++ [unquote(nested_module_name)]}
+        |> Macro.expand(__ENV__)
+
+      defmodule current_module_ast do
+        use Construct
+        structure do: unquote(contents)
+      end
+
+      Construct.__field__(__MODULE__, unquote(name), current_module_ast, unquote(opts))
+    end
   end
 
   defp check_type!({:array, type}) do
@@ -255,23 +257,14 @@ defmodule Construct do
   end
 
   defp check_type_complex!(module) do
-    case Agent.start(fn -> MapSet.new end, name: @type_checker_name) do
-      {:ok, _} ->
-        raise Construct.DefinitionError, "type checker crashed unexpectedly"
-      {:error, {:already_started, _}} ->
-        case Agent.get(@type_checker_name, &MapSet.member?(&1, module)) do
-          true -> :ok
-          _ ->
-            case Code.ensure_compiled?(module) do
-              false -> raise Construct.DefinitionError, "undefined module #{module}"
-              _ ->
-                case function_exported?(module, :cast, 1) do
-                  true -> :ok
-                  _ -> raise Construct.DefinitionError, "undefined function cast/1 for #{module}"
-                end
-            end
-        end
-      _ -> raise Construct.DefinitionError, "unexpected compilation error"
+    unless Agent.get(@type_checker_name, &MapSet.member?(&1, module)) do
+      unless Code.ensure_compiled?(module) do
+        raise Construct.DefinitionError, "undefined module #{module}"
+      end
+
+      unless function_exported?(module, :cast, 1) do
+        raise Construct.DefinitionError, "undefined function cast/1 for #{module}"
+      end
     end
   end
 
