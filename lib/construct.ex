@@ -27,6 +27,7 @@ defmodule Construct do
   """
 
   @type t :: struct
+  @type_checker_name Construct.TypeRegistry
 
   @doc false
   defmacro __using__(opts \\ []) do
@@ -34,6 +35,8 @@ defmodule Construct do
       @behaviour Construct
 
       import Construct, only: [structure: 1]
+
+      @type t :: %__MODULE__{}
 
       def make(params \\ %{}, opts \\ []) do
         Construct.Cast.make(__MODULE__, params, Keyword.merge(opts, unquote(opts)))
@@ -61,17 +64,16 @@ defmodule Construct do
     quote do
       import Construct
 
+      Construct.__register_as_complex_type__(__MODULE__)
+
       Module.register_attribute(__MODULE__, :fields, accumulate: true)
       Module.register_attribute(__MODULE__, :construct_fields, accumulate: true)
 
       unquote(block)
 
-      construct_fields = Enum.reverse(@construct_fields)
-      fields = Enum.reverse(@fields)
-
       Module.eval_quoted __ENV__, [
-        Construct.__defstruct__(construct_fields),
-        Construct.__types__(fields)]
+        Construct.__defstruct__(@construct_fields),
+        Construct.__types__(@fields)]
     end
   end
 
@@ -223,8 +225,17 @@ defmodule Construct do
     Module.put_attribute(mod, :construct_fields, {name, default_for_struct(opts)})
   end
 
-  defp default_for_struct(opts) do
-    check_default!(Keyword.get(opts, :default))
+
+  @doc """
+  This function register module as a valid Construct type. This allows compile-time type checks
+  """
+  def __register_as_complex_type__(module) do
+    case Agent.start(fn -> MapSet.new end, name: @type_checker_name) do
+      {:ok, pid} -> pid
+      {:error, {:already_started, pid}} -> pid
+      _ -> raise Construct.DefinitionError, "unexpected compilation error"
+    end
+    |> Agent.update(&MapSet.put(&1, module))
   end
 
   defp check_type!({:array, type}) do
@@ -244,26 +255,31 @@ defmodule Construct do
   end
 
   defp check_type_complex!(module) do
-    unless Code.ensure_compiled?(module) do
-      raise Construct.DefinitionError, "undefined module #{module}"
+    case Agent.start(fn -> MapSet.new end, name: @type_checker_name) do
+      {:ok, _} ->
+        raise Construct.DefinitionError, "type checker crashed unexpectedly"
+      {:error, {:already_started, _}} ->
+        case Agent.get(@type_checker_name, &MapSet.member?(&1, module)) do
+          true -> :ok
+          _ ->
+            case Code.ensure_compiled?(module) do
+              false -> raise Construct.DefinitionError, "undefined module #{module}"
+              _ ->
+                case function_exported?(module, :cast, 1) do
+                  true -> :ok
+                  _ -> raise Construct.DefinitionError, "undefined function cast/1 for #{module}"
+                end
+            end
+        end
+      _ -> raise Construct.DefinitionError, "unexpected compilation error"
     end
-
-    unless function_exported?(module, :cast, 1) do
-      raise Construct.DefinitionError, "undefined function cast/1 for #{module}"
-    end
   end
 
-  defp check_field_name!(name) when is_atom(name) do
-    :ok
-  end
-  defp check_field_name!(name) do
-    raise Construct.DefinitionError, "expected atom for field name, got `#{inspect(name)}`"
-  end
+  defp check_field_name!(name) when is_atom(name), do: :ok
+  defp check_field_name!(name), do: raise Construct.DefinitionError, "expected atom for field name, got `#{inspect(name)}`"
 
-  defp check_default!(default) when is_function(default) do
-    raise Construct.DefinitionError, "default value cannot to be a function"
-  end
-  defp check_default!(default) do
-    default
-  end
+  defp default_for_struct(opts), do: check_default!(Keyword.get(opts, :default))
+
+  defp check_default!(default) when is_function(default), do: raise Construct.DefinitionError, "default value cannot to be a function"
+  defp check_default!(default), do: default
 end
