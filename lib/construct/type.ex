@@ -180,10 +180,10 @@ defmodule Construct.Type do
   def cast(:boolean, term) when term in ~w(false 0), do: {:ok, false}
 
   def cast(:decimal, term) when is_binary(term) do
-    Decimal.parse(term)
+    apply(Decimal, :parse, [term])
   end
   def cast(:decimal, term) when is_number(term) do
-    {:ok, Decimal.new(term)}
+    {:ok, apply(Decimal, :new, [term])}
   end
 
   def cast(:date, term) do
