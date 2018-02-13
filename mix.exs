@@ -48,7 +48,6 @@ defmodule Construct.Mixfile do
   defp package do
     [
       name: :construct,
-      files: ["lib", "mix.exs"],
       maintainers: ["Yuri Artemev", "Alexander Malaev"],
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/ExpressApp/construct"}
