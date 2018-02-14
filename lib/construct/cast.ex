@@ -25,6 +25,9 @@ defmodule Construct.Cast do
       iex> make(User, %{name: "john doe"})
       {:ok, %User{name: "john doe"}}
 
+      iex> make(User, name: "john doe")
+      {:ok, %User{name: "john doe"}}
+
   Also you can use it as standalone complex type-coercion by providing types and params:
 
       iex> make(%{name: {:string, []}}, %{"name" => "john doe"})
@@ -129,11 +132,14 @@ defmodule Construct.Cast do
         nil
 
       ({key, _value}, _) when is_binary(key) ->
-        raise Construct.MakeError, "expected params to be a map with atoms or string keys, " <>
+        raise Construct.MakeError, "expected params to be a map or keyword list with atom or string keys, " <>
                                    "got a map with mixed keys: #{inspect(params)}"
 
       ({key, value}, acc) when is_atom(key) ->
         Map.put(acc || %{}, Atom.to_string(key), value)
+
+      (invalid_kv, _acc) ->
+        raise Construct.MakeError, "expected params to be a {key, value} structure, got: #{inspect(invalid_kv)}"
 
     end) || params
   end

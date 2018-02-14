@@ -29,6 +29,10 @@ defmodule Construct.CastTest do
       assert {:ok, %{a: "test"}} == Cast.make(Valid, %{a: "test"}, make_map: true)
     end
 
+    test "accepts params as keyword list" do
+      assert {:ok, %Valid{a: "test"}} == Cast.make(Valid, [a: "test"])
+    end
+
     test "throws error with invalid module" do
       assert_raise(Construct.Error, ~s(undefined structure Construct.CastTest.Invalid, it is not defined or does not exist), fn ->
         Cast.make(Invalid, %{})
@@ -44,6 +48,19 @@ defmodule Construct.CastTest do
     test "throws error with invalid param as structure module" do
       assert_raise(Construct.Error, ~s(undefined structure "some"), fn ->
         Cast.make("some", %{})
+      end)
+    end
+
+    test "throws error with invalid key-value params" do
+      assert_raise(Construct.MakeError, ~s(expected params to be a {key, value} structure, got: :a), fn ->
+        assert {:ok, %Valid{a: "test"}} == Cast.make(Valid, [:a])
+      end)
+
+      message = "expected params to be a {key, value} structure, " <>
+                "got: {:key, :value, \"what\"}"
+
+      assert_raise(Construct.MakeError, message, fn ->
+        assert {:ok, %Valid{a: "test"}} == Cast.make(Valid, [{:key, :value, "what"}])
       end)
     end
   end
