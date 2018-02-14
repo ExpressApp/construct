@@ -33,6 +33,9 @@ defmodule Construct.Cast do
       iex> make(%{name: {:string, []}}, %{"name" => "john doe"})
       {:ok, %{name: "john doe"}}
 
+      iex> make(%{name: :string}, %{"name" => "john doe"})
+      {:ok, %{name: "john doe"}}
+
       iex> make(%{age: {:integer, [default: 18]}}, %{"age" => "42"})
       {:ok, %{age: 42}}
 
@@ -158,7 +161,9 @@ defmodule Construct.Cast do
 
   defp type!(types, key) do
     case Map.fetch(types, key) do
-      {:ok, type} -> type
+      {:ok, {type, []}} -> {type, []}
+      {:ok, {type, [{_,_}|_] = type_opts}} -> {type, type_opts}
+      {:ok, type} -> {type, []}
       :error -> raise Construct.Error, "unknown field `#{key}`"
     end
   end
