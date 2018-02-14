@@ -53,6 +53,12 @@ defmodule Construct.CastTest do
       assert {:ok, %{foo: 1}} == Cast.make(%{foo: {:integer, []}}, %{"foo" => "1"})
     end
 
+    test "with type only" do
+      assert {:ok, %{foo: 1}} == Cast.make(%{foo: :integer}, %{"foo" => "1"})
+      assert {:ok, %{foo: [1, 2]}} == Cast.make(%{foo: {:array, :integer}}, %{"foo" => ["1", "2"]})
+      assert {:ok, %{foo: [1, 2, 3]}} == Cast.make(%{foo: [CommaList, {:array, :integer}]}, %{"foo" => "1,2,3"})
+    end
+
     test "with `default: nil`" do
       types = %{foo: {:integer, [default: nil]}}
 
