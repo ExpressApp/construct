@@ -18,6 +18,14 @@ defmodule Construct.Integration.MakeTest do
     assert {:ok, %{key: "test"}} = make(module, struct)
   end
 
+  test "with params as keyword list" do
+    module = create_construct do
+      field :key
+    end
+
+    assert {:ok, %{key: "test"}} = make(module, key: "test")
+  end
+
   test "field with type `{:array, t}`" do
     module = create_construct do
       field :key, {:array, :string}
@@ -241,7 +249,7 @@ defmodule Construct.Integration.MakeTest do
       field :b
     end
 
-    message = "expected params to be a map with atoms or string keys, " <>
+    message = "expected params to be a map or keyword list with atom or string keys, " <>
               "got a map with mixed keys: %{:b => \"10\", \"a\" => \"john\"}"
 
     assert_raise(Construct.MakeError, message, fn ->
