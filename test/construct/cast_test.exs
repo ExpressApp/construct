@@ -45,8 +45,8 @@ defmodule Construct.CastTest do
       end)
     end
 
-    test "throws error with invalid param as structure module" do
-      assert_raise(Construct.Error, ~s(undefined structure "some"), fn ->
+    test "throws error with invalid param as a structure module" do
+      assert_raise(Construct.Error, ~s(expected types to be a {key, value} structure, got: "some"), fn ->
         Cast.make("some", %{})
       end)
     end
@@ -68,6 +68,10 @@ defmodule Construct.CastTest do
   describe "#make(types, params, opts)" do
     test "returns map" do
       assert {:ok, %{foo: 1}} == Cast.make(%{foo: {:integer, []}}, %{"foo" => "1"})
+    end
+
+    test "with types as a keyword list" do
+      assert {:ok, %{foo: 1}} == Cast.make([foo: {:integer, []}], %{"foo" => "1"})
     end
 
     test "with type only" do
