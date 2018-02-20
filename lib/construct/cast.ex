@@ -36,6 +36,9 @@ defmodule Construct.Cast do
       iex> make(%{name: :string}, %{"name" => "john doe"})
       {:ok, %{name: "john doe"}}
 
+      iex> make([name: :string], %{"name" => "john doe"})
+      {:ok, %{name: "john doe"}}
+
       iex> make(%{age: {:integer, [default: 18]}}, %{"age" => "42"})
       {:ok, %{age: 42}}
 
@@ -64,11 +67,8 @@ defmodule Construct.Cast do
   def make(module, params, opts) when is_atom(module) do
     make(make_struct_instance(module), collect_types(module), params, opts)
   end
-  def make(types, params, opts) when is_map(types) do
+  def make(types, params, opts) do
     cast_params(types, params, opts)
-  end
-  def make(structure, _params, _opts) do
-    raise Construct.Error, "undefined structure #{inspect(structure)}"
   end
 
   @doc false
@@ -112,6 +112,7 @@ defmodule Construct.Cast do
   defp cast_params(types, params, opts) do
     empty_values = Keyword.get(opts, :empty_values, [])
     params = convert_params(params)
+    types = convert_types(types)
     permitted = Map.keys(types)
 
     {changes, errors, valid?} =
@@ -125,11 +126,10 @@ defmodule Construct.Cast do
     end
   end
 
-  @doc false
-  def convert_params(%{__struct__: _} = params) do
+  defp convert_params(%{__struct__: _} = params) do
     convert_params(Map.from_struct(params))
   end
-  def convert_params(params) do
+  defp convert_params(params) do
     Enum.reduce(params, nil, fn
       ({key, _value}, nil) when is_binary(key) ->
         nil
@@ -145,6 +145,16 @@ defmodule Construct.Cast do
         raise Construct.MakeError, "expected params to be a {key, value} structure, got: #{inspect(invalid_kv)}"
 
     end) || params
+  end
+
+  defp convert_types(types) when is_map(types) do
+    types
+  end
+  defp convert_types(types) when is_list(types) do
+    types |> Enum.into(%{}) |> convert_types()
+  end
+  defp convert_types(invalid_types) do
+    raise Construct.Error, "expected types to be a {key, value} structure, got: #{inspect(invalid_types)}"
   end
 
   defp process_param(key, params, types, empty_values, opts, {changes, errors, valid?}) do
