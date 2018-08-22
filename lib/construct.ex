@@ -164,6 +164,8 @@ defmodule Construct do
 
   @doc false
   def __defstruct__(construct_fields) do
+    construct_fields = Enum.uniq_by(construct_fields, fn({k, _v}) -> k end)
+
     quote do
       defstruct unquote(Macro.escape(construct_fields))
     end
@@ -171,6 +173,8 @@ defmodule Construct do
 
   @doc false
   def __types__(fields) do
+    fields = Enum.uniq_by(fields, fn({k, _v, _opts}) -> k end)
+
     quoted =
       Enum.map(fields, fn({name, type, opts}) ->
         quote do

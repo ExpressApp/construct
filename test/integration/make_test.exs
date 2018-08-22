@@ -206,6 +206,25 @@ defmodule Construct.Integration.MakeTest do
     assert {:ok, %{a: "a", b: "b", c: "c", d: "d"}} = make(module, %{a: "a", b: "b", c: "c", d: "d"})
   end
 
+  test "structure with fields that overrides previously defined in include" do
+    include1_module = create_construct do
+      field :a, :string
+      field :b, :string
+      field :c, :string, default: "from include"
+    end
+
+    include1 = name(include1_module)
+
+    module = create_construct do
+      include include1
+
+      field :a, :integer, default: 0
+      field :c, :string, default: "from module"
+    end
+
+    assert {:ok, %{a: 0, b: "b", c: "from module"}} = make(module, %{b: "b"})
+  end
+
   test "field with `[CommaList, {:array, :integer}]` type" do
     module = create_construct do
       field :key, [CommaList, {:array, :integer}]
