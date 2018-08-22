@@ -6,9 +6,7 @@ defmodule Construct.CastTest do
   doctest Construct.Cast, import: true
 
   defmodule Valid do
-    use Construct
-
-    structure do
+    use Construct do
       field :a
     end
   end

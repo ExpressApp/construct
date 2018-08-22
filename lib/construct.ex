@@ -31,10 +31,21 @@ defmodule Construct do
 
   @doc false
   defmacro __using__(opts \\ []) do
+    definition = Keyword.get(opts, :do)
+
+    structure =
+      if definition do
+        defstructure(definition)
+      else
+        []
+      end
+
     quote do
       @behaviour Construct
 
       import Construct, only: [structure: 1]
+
+      unquote(structure)
 
       @type t :: %__MODULE__{}
 
@@ -61,6 +72,10 @@ defmodule Construct do
   Defines a structure.
   """
   defmacro structure([do: block]) do
+    defstructure(block)
+  end
+
+  defp defstructure(block) do
     quote do
       import Construct
 
