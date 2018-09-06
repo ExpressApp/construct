@@ -1,6 +1,10 @@
 # The directory Mix will write compiled artifacts to.
 /_build
 
+# Bench results
+/bench/graph
+/bench/snapshots
+
 # If you run "mix test --cover", coverage assets end up here.
 /cover
 

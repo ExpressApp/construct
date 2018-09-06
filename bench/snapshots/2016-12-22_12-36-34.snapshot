@@ -1,3 +1,0 @@
-duration:1.0;mem stats:false;sys mem stats:false
-module;test;tags;iterations;elapsed
-StructBench	complex		200000	1871133
