@@ -1,5 +1,11 @@
 ## Changelog
 
+## v2.0.0
+
+* Enhancements
+  * Structs created from `struct/1,2` and `make/1,2` are now equal
+  * Structs that have required fields returns error when creating from `struct/1,2`
+
 ## v1.2.0
 
 * Enhancements
