@@ -28,6 +28,7 @@ defmodule Construct do
 
   @type t :: struct
   @type_checker_name Construct.TypeRegistry
+  @no_default :__construct_no_default__
 
   @doc false
   defmacro __using__(opts \\ []) do
@@ -84,11 +85,12 @@ defmodule Construct do
 
       Module.register_attribute(__MODULE__, :fields, accumulate: true)
       Module.register_attribute(__MODULE__, :construct_fields, accumulate: true)
+      Module.register_attribute(__MODULE__, :construct_fields_enforce, accumulate: true)
 
       unquote(block)
 
       Module.eval_quoted __ENV__, [
-        Construct.__defstruct__(@construct_fields),
+        Construct.__defstruct__(@construct_fields, @construct_fields_enforce),
         Construct.__types__(@fields)]
     end
   end
@@ -178,10 +180,12 @@ defmodule Construct do
   @callback cast(params :: map, opts :: Keyword.t) :: {:ok, t} | {:error, term}
 
   @doc false
-  def __defstruct__(construct_fields) do
+  def __defstruct__(construct_fields, construct_fields_enforce) do
     construct_fields = Enum.uniq_by(construct_fields, fn({k, _v}) -> k end)
+    construct_fields_enforce = Enum.uniq(construct_fields_enforce)
 
     quote do
+      @enforce_keys unquote(construct_fields_enforce)
       defstruct unquote(Macro.escape(construct_fields))
     end
   end
@@ -216,8 +220,17 @@ defmodule Construct do
     check_field_name!(name)
     check_type!(type)
 
-    Module.put_attribute(mod, :fields, {name, type, opts})
-    Module.put_attribute(mod, :construct_fields, {name, default_for_struct(opts)})
+    case default_for_struct(type, opts) do
+      @no_default ->
+        Module.put_attribute(mod, :fields, {name, type, opts})
+        Module.put_attribute(mod, :construct_fields, {name, nil})
+        Module.put_attribute(mod, :construct_fields_enforce, name)
+
+      default ->
+        Module.put_attribute(mod, :fields, {name, type, Keyword.put(opts, :default, default)})
+        Module.put_attribute(mod, :construct_fields, {name, default})
+
+    end
   end
 
   @doc false
@@ -276,7 +289,7 @@ defmodule Construct do
   end
 
   defp check_type_complex!(module) do
-    unless Agent.get(@type_checker_name, &MapSet.member?(&1, module)) do
+    unless construct_module?(module) do
       unless Code.ensure_compiled?(module) do
         raise Construct.DefinitionError, "undefined module #{module}"
       end
@@ -287,11 +300,45 @@ defmodule Construct do
     end
   end
 
-  defp check_field_name!(name) when is_atom(name), do: :ok
-  defp check_field_name!(name), do: raise Construct.DefinitionError, "expected atom for field name, got `#{inspect(name)}`"
+  defp check_field_name!(name) when is_atom(name) do
+    :ok
+  end
+  defp check_field_name!(name) do
+    raise Construct.DefinitionError, "expected atom for field name, got `#{inspect(name)}`"
+  end
 
-  defp default_for_struct(opts), do: check_default!(Keyword.get(opts, :default))
+  defp default_for_struct(maybe_module, opts) when is_atom(maybe_module) do
+    case check_default!(Keyword.get(opts, :default, @no_default)) do
+      @no_default -> try_to_make_struct_instance(maybe_module)
+      val -> val
+    end
+  end
+  defp default_for_struct(_, opts) do
+    check_default!(Keyword.get(opts, :default, @no_default))
+  end
 
-  defp check_default!(default) when is_function(default), do: raise Construct.DefinitionError, "default value cannot to be a function"
-  defp check_default!(default), do: default
+  defp check_default!(default) when is_function(default) do
+    raise Construct.DefinitionError, "default value cannot to be a function"
+  end
+  defp check_default!(default) do
+    default
+  end
+
+  defp try_to_make_struct_instance(module) do
+    if construct_module?(module) do
+      make_struct(module)
+    else
+      @no_default
+    end
+  end
+
+  defp make_struct(module) do
+    struct!(module)
+  rescue
+    [ArgumentError, UndefinedFunctionError] -> @no_default
+  end
+
+  defp construct_module?(module) do
+    Agent.get(@type_checker_name, &MapSet.member?(&1, module))
+  end
 end
