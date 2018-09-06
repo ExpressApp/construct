@@ -89,9 +89,9 @@ defmodule Construct do
 
       unquote(block)
 
-      Module.eval_quoted __ENV__, [
+      Module.eval_quoted __ENV__, {:__block__, [], [
         Construct.__defstruct__(@construct_fields, @construct_fields_enforce),
-        Construct.__types__(@fields)]
+        Construct.__types__(@fields)]}
     end
   end
 
@@ -210,7 +210,7 @@ defmodule Construct do
 
     quote do
       def __structure__(:types), do: unquote(types)
-      unquote(quoted)
+      unquote({:__block__, [], quoted})
       def __structure__(:type, _), do: nil
     end
   end
@@ -229,6 +229,7 @@ defmodule Construct do
       default ->
         Module.put_attribute(mod, :fields, {name, type, Keyword.put(opts, :default, default)})
         Module.put_attribute(mod, :construct_fields, {name, default})
+        pop_attribute(mod, :construct_fields_enforce, name)
 
     end
   end
@@ -270,6 +271,13 @@ defmodule Construct do
 
       Construct.__field__(__MODULE__, unquote(name), current_module_ast, unquote(opts))
     end
+  end
+
+  defp pop_attribute(mod, key, value) do
+    old = Module.get_attribute(mod, key)
+    Module.delete_attribute(mod, key)
+
+    Enum.each(old -- [value], &Module.put_attribute(mod, key, &1))
   end
 
   defp check_type!({:array, type}) do

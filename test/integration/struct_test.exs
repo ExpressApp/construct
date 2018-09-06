@@ -39,6 +39,24 @@ defmodule Construct.Integration.StructTest do
     end
   end
 
+  defmodule Test30 do
+    use Construct
+
+    structure do
+      field :a, :string
+    end
+  end
+
+  defmodule Test31 do
+    use Construct
+
+    structure do
+      include Test30
+
+      field :a, :string, default: "test"
+    end
+  end
+
   test "struct should be equal with make" do
     assert struct!(Test0) == Test0.make!()
   end
@@ -46,6 +64,10 @@ defmodule Construct.Integration.StructTest do
   test "struct have nested structs with all defaults" do
     assert %Test0{a: %Test0.A{b: %Test0.A.B{c: "test", d: "test"}}, e: "test"}
         == struct!(Test0)
+  end
+
+  test "struct default overwriting should reset enforce_keys" do
+    assert %Test31{}
   end
 
   test "struct have nested structs without defaults in some fields" do
