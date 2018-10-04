@@ -1,5 +1,10 @@
 ## Changelog
 
+## v1.1.1
+* Enhancements
+  * Definition in using macro
+  * Add able to override fields
+
 ## v1.1.0
 
 * Enhancements
