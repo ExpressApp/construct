@@ -67,6 +67,17 @@ defmodule Construct.TypeTest do
           == Type.cast({:map, CustomType}, nil)
     end
 
+    test ":struct" do
+      assert {:ok, %User{name: "john"}}
+          == Type.cast(:struct, %User{name: "john"})
+      assert :error
+          == Type.cast(:struct, %{name: "john"})
+      assert :error
+          == Type.cast(:struct, nil)
+      assert :error
+          == Type.cast(:struct, 42)
+    end
+
     test "[CommaList, {:array, :integer}]" do
       assert {:ok, [1, 2, 3]}
           == Type.cast([CommaList, {:array, :integer}], "1,2,3")

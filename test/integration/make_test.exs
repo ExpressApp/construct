@@ -43,6 +43,20 @@ defmodule Construct.Integration.MakeTest do
     assert {:ok, %{key: %{"k1" => "v1", "k2" => "v2"}}} = make(module, %{key: %{"k1" => "v1", "k2" => "v2"}})
   end
 
+  test "field with type `:struct`" do
+    nested_module = create_construct do
+      field :key
+    end
+
+    module = create_construct do
+      field :key, :struct
+    end
+
+    assert {:ok, nested} = make(nested_module, %{key: "test"})
+    assert {:ok, %{key: %{key: "test"} = value}} = make(module, %{key: nested})
+    assert Map.has_key?(value, :__struct__)
+  end
+
   test "field with type `any`" do
     module = create_construct do
       field :key, :any
