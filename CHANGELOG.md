@@ -1,5 +1,10 @@
 ## Changelog
 
+## v1.2.0
+
+* Enhancements
+  * Add `struct` type
+
 ## v1.1.1
 * Enhancements
   * Definition in using macro
