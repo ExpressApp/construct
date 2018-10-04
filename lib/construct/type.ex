@@ -20,11 +20,11 @@ defmodule Construct.Type do
   @type builtin :: :integer | :float | :boolean | :string |
                    :binary | :decimal | :utc_datetime |
                    :naive_datetime | :date | :time | :any |
-                   {:array, t} | {:map, t}
+                   :array | {:array, t} | :map | {:map, t} | :struct
 
   @type cast_ret :: {:ok, term} | {:error, term} | :error
 
-  @builtin ~w(integer float boolean string binary decimal utc_datetime naive_datetime date time any array map)a
+  @builtin ~w(integer float boolean string binary decimal utc_datetime naive_datetime date time any array map struct)a
 
   @doc """
   Casts the given input to the custom type.
@@ -340,6 +340,7 @@ defmodule Construct.Type do
   defp of_base_type?(:binary, term),     do: is_binary(term)
   defp of_base_type?(:string, term),     do: is_binary(term)
   defp of_base_type?(:map, term),        do: is_map(term) and not Map.has_key?(term, :__struct__)
+  defp of_base_type?(:struct, term),     do: is_map(term) and Map.has_key?(term, :__struct__)
   defp of_base_type?(:decimal, value),   do: match?(%{__struct__: Decimal}, value)
   defp of_base_type?(_, _),              do: false
 
