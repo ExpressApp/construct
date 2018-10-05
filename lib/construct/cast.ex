@@ -65,7 +65,7 @@ defmodule Construct.Cast do
   @spec make(atom | types, map, options) :: {:ok, Construct.t | map} | {:error, term}
   def make(struct_or_types, params, opts \\ [])
   def make(module, params, opts) when is_atom(module) do
-    make(make_struct_instance(module), collect_types(module), params, opts)
+    make_struct(make_struct_instance(module), collect_types(module), params, opts)
   end
   def make(types, params, opts) do
     cast_params(types, params, opts)
@@ -86,7 +86,7 @@ defmodule Construct.Cast do
   @doc false
   defp make_struct_instance(module) do
     try do
-      module.__struct__
+      struct(module)
     rescue
       UndefinedFunctionError ->
         raise Construct.Error, "undefined structure #{inspect(module)}, it is not defined or does not exist"
@@ -94,7 +94,7 @@ defmodule Construct.Cast do
   end
 
   @doc false
-  defp make(%{__struct__: _module} = struct, types, params, opts) do
+  defp make_struct(%{__struct__: _module} = struct, types, params, opts) do
     make_map? = Keyword.get(opts, :make_map, false)
 
     case cast_params(types, params, opts) do
