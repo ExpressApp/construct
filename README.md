@@ -6,13 +6,21 @@ Library for dealing with data structures
 
 ---
 
+* [Installation](#installation)
+* [Usage](#usage)
+* [Types](#types)
+* [Construct definition](#construct-definition)
+* [Errors while making structures](#errors-while-making-structures)
+
+---
+
 ## Installation
 
 1. Add `construct` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:construct, "~> 1.0.0"}]
+  [{:construct, "~> 2.0"}]
 end
 ```
 
@@ -30,9 +38,7 @@ Suppose you have some user input from several sources (DB, HTTP request, WebSock
 
 ```elixir
 defmodule User do
-  use Construct
-
-  structure do
+  use Construct do
     field :name
     field :age, :integer
   end
@@ -62,9 +68,7 @@ And use it in your structure like this:
 
 ```elixir
 defmodule Quiz do
-  use Construct
-
-  structure do
+  use Construct do
     field :user_id, :integer
     field :answers, {:array, Answer}
   end
@@ -89,13 +93,13 @@ defmodule CommaList do
 end
 
 defmodule SearchFilterRequest do
-  use Construct
-
-  structure do
+  use Construct do
     field :user_ids, [CommaList, {:array, :integer}], default: []
   end
 end
 ```
+
+(Use `CommaList` type from [construct_types](https://github.com/ExpressApp/construct_types/blob/master/lib/types/comma_list.ex) package).
 
 ```elixir
 iex> SearchFilterRequest.make(%{"user_ids" => "1,2,42"})
@@ -115,17 +119,13 @@ You can use already defined structures as types:
 
 ```elixir
 defmodule Comment do
-  use Construct
-
-  structure do
+  use Construct do
     field :text
   end
 end
 
 defmodule Post do
-  use Construct
-
-  structure do
+  use Construct do
     field :title
     field :comments, {:array, Comment}
   end
@@ -139,26 +139,20 @@ And include repeated fields in structures:
 
 ```elixir
 defmodule PK do
-  use Construct
-
-  structure do
+  use Construct do
     field :primary_key, :integer
   end
 end
 
 defmodule Timestamps do
-  use Construct
-
-  structure do
+  use Construct do
     field :inserted_at, :utc_datetime
     field :updated_at, :utc_datetime, default: nil
   end
 end
 
 defmodule User do
-  use Construct
-
-  structure do
+  use Construct do
     include PK
     include Timestamps
 
@@ -170,6 +164,55 @@ iex> User.make(%{name: "John Doe", inserted_at: "2015-01-23 23:50:07", primary_k
 {:ok,
  %User{inserted_at: #DateTime<2015-01-23 23:50:07Z>, name: "John Doe",
   primary_key: 42, updated_at: nil}}
+```
+
+> What if I don't want to define module to make a nested field?
+
+`field` macro can `do` it for you:
+
+```elixir
+defmodule User do
+  use Construct do
+    field :name do
+      field :first
+      field :last, :string, default: nil
+    end
+  end
+end
+
+iex> User.make(name: %{first: "John"})
+{:ok, %User{name: %User.Name{first: "John", last: nil}}}
+```
+
+Construct tries to fit in Elixir as much as it possible:
+
+```elixir
+defmodule ComplexDefaults do
+  use Construct do
+    field :required
+
+    field :nested do
+      field :key, :string, default: "nesting 1"
+
+      field :nested do
+        field :key, :string, default: "nesting 2"
+      end
+    end
+  end
+end
+
+iex(6)> %ComplexDefaults{}
+** (ArgumentError) the following keys must also be given when building struct ComplexDefaults: [:required]
+    expanding struct: ComplexDefaults.__struct__/1
+
+iex(6)> %ComplexDefaults{required: 1}
+%ComplexDefaults{
+  nested: %ComplexDefaults.Nested{
+    key: "nesting 1",
+    nested: %ComplexDefaults.Nested.Nested{key: "nesting 2"}
+  },
+  required: 1
+}
 ```
 
 ## Types
@@ -188,6 +231,9 @@ iex> User.make(%{name: "John Doe", inserted_at: "2015-01-23 23:50:07", primary_k
   * date
   * time
   * any
+  * array
+  * map
+  * struct
 * `{:array, t()}`
 * `{:map, t()}`
 * `[t()]`
@@ -238,7 +284,7 @@ Where:
 
 ## Errors while making structures
 
-When you provide invalid data to your structures you can get tuple with errors:
+When you provide invalid data to your structures you can get tuple with errors as maps:
 
 ```elixir
 iex> Post.make
