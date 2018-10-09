@@ -32,21 +32,21 @@ defmodule Construct do
 
   @doc false
   defmacro __using__(opts \\ []) do
-    definition = Keyword.get(opts, :do)
+    {definition, opts} = Keyword.pop(opts, :do)
 
-    structure =
+    pre_ast =
       if definition do
         defstructure(definition)
       else
-        []
+        quote do
+          import Construct, only: [structure: 1]
+        end
       end
 
     quote do
       @behaviour Construct
 
-      import Construct, only: [structure: 1]
-
-      unquote(structure)
+      unquote(pre_ast)
 
       @type t :: %__MODULE__{}
 

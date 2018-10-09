@@ -6,12 +6,16 @@
   * Structs created from `struct/1,2` and `make/1,2` are now equal
   * Structs that have required fields returns error when creating from `struct/1,2`
 
+* Bug fixes
+  * Fix define structure via using
+
 ## v1.2.0
 
 * Enhancements
   * Add `struct` type
 
 ## v1.1.1
+
 * Enhancements
   * Definition in using macro
   * Add able to override fields

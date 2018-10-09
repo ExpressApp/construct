@@ -2,9 +2,7 @@ defmodule Construct.Integration.StructTest do
   use Construct.TestCase
 
   defmodule Test0 do
-    use Construct
-
-    structure do
+    use Construct do
       field :a do
         field :b do
           field :c, :string, default: "test"
@@ -17,9 +15,7 @@ defmodule Construct.Integration.StructTest do
   end
 
   defmodule Test1 do
-    use Construct
-
-    structure do
+    use Construct do
       field :a do
         field :b do
           field :c, :string
@@ -32,25 +28,19 @@ defmodule Construct.Integration.StructTest do
   end
 
   defmodule Test2 do
-    use Construct
-
-    structure do
+    use Construct do
       field :test, Test2
     end
   end
 
   defmodule Test30 do
-    use Construct
-
-    structure do
+    use Construct do
       field :a, :string
     end
   end
 
   defmodule Test31 do
-    use Construct
-
-    structure do
+    use Construct do
       include Test30
 
       field :a, :string, default: "test"
