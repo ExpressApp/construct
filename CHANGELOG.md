@@ -1,11 +1,17 @@
 ## Changelog
 
+## v1.2.1
+
+* Bug fixes
+  * Fix define structure via using
+
 ## v1.2.0
 
 * Enhancements
   * Add `struct` type
 
 ## v1.1.1
+
 * Enhancements
   * Definition in using macro
   * Add able to override fields
