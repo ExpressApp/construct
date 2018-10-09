@@ -6,8 +6,6 @@ defmodule Construct.Mixfile do
      version: "2.0.0",
      elixir: "~> 1.3",
      deps: deps(),
-     test_coverage: [tool: ExCoveralls],
-     preferred_cli_env: preferred_cli_env(),
      elixirc_paths: elixirc_paths(Mix.env),
 
      # Hex
@@ -23,19 +21,14 @@ defmodule Construct.Mixfile do
     [applications: []]
   end
 
-  defp preferred_cli_env do
-    [coveralls: :test]
-  end
-
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
   defp deps do
-    [{:decimal, "~> 1.3.1", only: [:dev, :test]},
-     {:benchfella, "~> 0.3.3", only: [:dev, :test]},
-     {:excoveralls, "~> 0.8.0", only: :test},
-     {:earmark, "~> 1.2.4", only: :dev},
-     {:ex_doc, "~> 0.18.1", only: :dev}]
+    [{:decimal, "~> 1.5", only: [:dev, :test]},
+     {:benchfella, "~> 0.3", only: [:dev, :test]},
+     {:earmark, "~> 1.2", only: :dev},
+     {:ex_doc, "~> 0.19", only: :dev}]
   end
 
   defp description do
