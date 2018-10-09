@@ -4,7 +4,7 @@ defmodule Construct.Mixfile do
   def project do
     [app: :construct,
      version: "2.0.0",
-     elixir: "~> 1.3",
+     elixir: "~> 1.4",
      deps: deps(),
      elixirc_paths: elixirc_paths(Mix.env),
 
