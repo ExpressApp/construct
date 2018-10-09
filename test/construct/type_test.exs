@@ -190,6 +190,10 @@ defmodule Construct.TypeTest do
           == Type.cast(:date, ~T[12:23:34])
       assert :error
           == Type.cast(:date, nil)
+      assert {:ok, @date}
+          == Type.cast(:date, "2015-12-31T00:00:00")
+      assert {:ok, @date}
+          == Type.cast(:date, "2015-12-31 00:00:00")
     end
 
     @time ~T[23:50:07]
@@ -199,8 +203,10 @@ defmodule Construct.TypeTest do
     test ":time" do
       assert {:ok, @time}
           == Type.cast(:time, @time)
-      assert  {:ok, @time_zero}
+      assert {:ok, @time_zero}
           == Type.cast(:time, @time_zero)
+      assert {:ok, @time_zero}
+          == Type.cast(:time, "23:50")
       assert {:ok, @time}
           == Type.cast(:time, "23:50:07")
       assert {:ok, @time}
@@ -209,6 +215,10 @@ defmodule Construct.TypeTest do
           == Type.cast(:time, "23:50:07.030000")
       assert {:ok, @time_usec}
           == Type.cast(:time, "23:50:07.030000Z")
+      assert :error
+          == Type.cast(:time, "24:01")
+      assert :error
+          == Type.cast(:time, "00:61")
       assert :error
           == Type.cast(:time, "24:01:01")
       assert :error
@@ -305,6 +315,8 @@ defmodule Construct.TypeTest do
       assert :error
           == Type.cast(:naive_datetime, @time)
       assert :error
+          == Type.cast(:naive_datetime, 1)
+      assert :error
           == Type.cast(:naive_datetime, nil)
     end
 
@@ -318,6 +330,8 @@ defmodule Construct.TypeTest do
           == Type.cast(:utc_datetime, @datetime)
       assert {:ok, @datetime_usec}
           == Type.cast(:utc_datetime, @datetime_usec)
+      assert {:ok, @datetime}
+          == Type.cast(:utc_datetime, "2015-01-24T09:50:07+10:00")
       assert {:ok, @datetime_leapyear}
           == Type.cast(:utc_datetime, @datetime_leapyear)
       assert {:ok, @datetime}
@@ -334,6 +348,8 @@ defmodule Construct.TypeTest do
           == Type.cast(:utc_datetime, "2015-01-23T23:50:07.008000")
       assert {:ok, @datetime_usec}
           == Type.cast(:utc_datetime, "2015-01-23T23:50:07.008000Z")
+      assert {:ok, @datetime_usec}
+          == Type.cast(:utc_datetime, "2015-01-23T17:50:07.008000-06:00")
       assert {:ok, @datetime}
           == Type.cast(:utc_datetime, %{"year" => "2015", "month" => "1", "day" => "23",
                                         "hour" => "23", "minute" => "50", "second" => "07"})
@@ -363,6 +379,8 @@ defmodule Construct.TypeTest do
           == Type.cast(:utc_datetime, %{year: 2015, month: 1, day: 23, hour: 23, minute: nil})
       assert :error
           == Type.cast(:utc_datetime, ~T[12:23:34])
+      assert :error
+          == Type.cast(:utc_datetime, 1)
       assert :error
           == Type.cast(:utc_datetime, nil)
     end

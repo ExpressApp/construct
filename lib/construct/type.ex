@@ -16,7 +16,7 @@ defmodule Construct.Type do
   """
 
   @type t       :: builtin | custom | list(builtin | custom)
-  @type custom  :: atom | Construct.t
+  @type custom  :: module | Construct.t
   @type builtin :: :integer | :float | :boolean | :string |
                    :binary | :decimal | :utc_datetime |
                    :naive_datetime | :date | :time | :any |
@@ -224,8 +224,13 @@ defmodule Construct.Type do
 
   defp cast_date(binary) when is_binary(binary) do
     case Date.from_iso8601(binary) do
-      {:ok, _} = ok -> ok
-      {:error, _} -> :error
+      {:ok, _} = ok ->
+        ok
+      {:error, _} ->
+        case NaiveDateTime.from_iso8601(binary) do
+          {:ok, naive_datetime} -> {:ok, NaiveDateTime.to_date(naive_datetime)}
+          {:error, _} -> :error
+        end
     end
   end
   defp cast_date(%{"year" => empty, "month" => empty, "day" => empty}) when empty in ["", nil],
@@ -250,6 +255,8 @@ defmodule Construct.Type do
 
   ## Time
 
+  defp cast_time(<<hour::2-bytes, ?:, minute::2-bytes>>),
+    do: cast_time(to_i(hour), to_i(minute), 0, nil)
   defp cast_time(binary) when is_binary(binary) do
     case Time.from_iso8601(binary) do
       {:ok, _} = ok -> ok
@@ -313,16 +320,34 @@ defmodule Construct.Type do
       end
     end
   end
+  defp cast_naive_datetime(_) do
+    :error
+  end
 
   ## UTC datetime
 
+  defp cast_utc_datetime(binary) when is_binary(binary) do
+    case DateTime.from_iso8601(binary) do
+      {:ok, datetime, _offset} -> {:ok, datetime}
+      {:error, :missing_offset} ->
+        case NaiveDateTime.from_iso8601(binary) do
+          {:ok, naive_datetime} -> {:ok, DateTime.from_naive!(naive_datetime, "Etc/UTC")}
+          {:error, _} -> :error
+        end
+      {:error, _} -> :error
+    end
+  end
+  defp cast_utc_datetime(%DateTime{time_zone: "Etc/UTC"} = datetime), do: {:ok, datetime}
+  defp cast_utc_datetime(%DateTime{} = datetime) do
+    case (datetime |> DateTime.to_unix() |> DateTime.from_unix()) do
+      {:ok, _} = ok -> ok
+      {:error, _} -> :error
+    end
+  end
   defp cast_utc_datetime(value) do
     case cast_naive_datetime(value) do
-      {:ok, %NaiveDateTime{year: year, month: month, day: day,
-                           hour: hour, minute: minute, second: second, microsecond: microsecond}} ->
-        {:ok, %DateTime{year: year, month: month, day: day,
-                        hour: hour, minute: minute, second: second, microsecond: microsecond,
-                        std_offset: 0, utc_offset: 0, zone_abbr: "UTC", time_zone: "Etc/UTC"}}
+      {:ok, %NaiveDateTime{} = naive_datetime} ->
+        {:ok, DateTime.from_naive!(naive_datetime, "Etc/UTC")}
       {:ok, _} = ok ->
         ok
       :error ->
