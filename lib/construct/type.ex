@@ -174,16 +174,23 @@ defmodule Construct.Type do
       _           -> :error
     end
   end
-  def cast(:float, term) when is_integer(term), do: {:ok, term + 0.0}
+  def cast(:float, term) when is_integer(term), do: {:ok, :erlang.float(term)}
 
   def cast(:boolean, term) when term in ~w(true 1),  do: {:ok, true}
   def cast(:boolean, term) when term in ~w(false 0), do: {:ok, false}
 
   def cast(:decimal, term) when is_binary(term) do
     apply(Decimal, :parse, [term])
+    |> validate_decimal()
   end
-  def cast(:decimal, term) when is_number(term) do
+  def cast(:decimal, term) when is_integer(term) do
     {:ok, apply(Decimal, :new, [term])}
+  end
+  def cast(:decimal, term) when is_float(term) do
+    {:ok, apply(Decimal, :from_float, [term])}
+  end
+  def cast(:decimal, %{__struct__: Decimal} = term) do
+    validate_decimal({:ok, term})
   end
 
   def cast(:date, term) do
@@ -356,6 +363,11 @@ defmodule Construct.Type do
   end
 
   ## Helpers
+
+  defp validate_decimal({:ok, %Decimal{coef: coef}}) when coef in [:inf, :qNaN, :sNaN],
+    do: :error
+  defp validate_decimal(value),
+    do: value
 
   # Checks if a value is of the given primitive type.
   defp of_base_type?(:any, _),           do: true

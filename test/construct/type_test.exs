@@ -136,6 +136,12 @@ defmodule Construct.TypeTest do
       assert {:ok, Decimal.new("1")}
           == Type.cast(:decimal, Decimal.new("1"))
       assert :error
+          == Type.cast(:decimal, "nan")
+      assert :error
+          == Type.cast(:decimal, Decimal.new("NaN"))
+      assert :error
+          == Type.cast(:decimal, Decimal.new("Infinity"))
+      assert :error
           == Type.cast(:decimal, nil)
     end
 
