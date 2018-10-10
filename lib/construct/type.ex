@@ -364,7 +364,7 @@ defmodule Construct.Type do
 
   ## Helpers
 
-  defp validate_decimal({:ok, %Decimal{coef: coef}}) when coef in [:inf, :qNaN, :sNaN],
+  defp validate_decimal({:ok, %{__struct__: Decimal, coef: coef}}) when coef in [:inf, :qNaN, :sNaN],
     do: :error
   defp validate_decimal(value),
     do: value
