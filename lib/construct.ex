@@ -110,14 +110,11 @@ defmodule Construct do
         raise Construct.DefinitionError, "undefined module #{module}"
       end
 
-      unless function_exported?(module, :__structure__, 1) do
+      unless function_exported?(module, :__construct__, 1) do
         raise Construct.DefinitionError, "provided #{module} is not Construct module"
       end
 
-      type_defs = module.__structure__(:types)
-
-      Enum.each(type_defs, fn({name, _type}) ->
-        {type, opts} = module.__structure__(:type, name)
+      Enum.each(module.__construct__(:types), fn({name, {type, opts}}) ->
         Construct.__field__(__MODULE__, name, type, opts)
       end)
     end
@@ -194,24 +191,13 @@ defmodule Construct do
   def __types__(fields) do
     fields = Enum.uniq_by(fields, fn({k, _v, _opts}) -> k end)
 
-    quoted =
-      Enum.map(fields, fn({name, type, opts}) ->
-        quote do
-          def __structure__(:type, unquote(name)) do
-            {unquote(Macro.escape(type)), unquote(Macro.escape(opts))}
-          end
-        end
-      end)
-
     types =
       fields
-      |> Enum.into(%{}, fn({name, type, _default}) -> {name, type} end)
+      |> Enum.into(%{}, fn({name, type, opts}) -> {name, {type, opts}} end)
       |> Macro.escape
 
     quote do
-      def __structure__(:types), do: unquote(types)
-      unquote({:__block__, [], quoted})
-      def __structure__(:type, _), do: nil
+      def __construct__(:types), do: unquote(types)
     end
   end
 

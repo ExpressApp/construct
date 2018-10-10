@@ -74,9 +74,7 @@ defmodule Construct.Cast do
   @doc false
   defp collect_types(module) do
     try do
-      Enum.into(module.__structure__(:types), %{}, fn({k, _v}) ->
-        {k, module.__structure__(:type, k)}
-      end)
+      module.__construct__(:types)
     rescue
       UndefinedFunctionError ->
         raise Construct.Error, "invalid structure #{inspect(module)}"
@@ -102,7 +100,7 @@ defmodule Construct.Cast do
         if make_map? do
           {:ok, changes}
         else
-          {:ok, apply_changes(struct, changes)}
+          {:ok, struct(struct, changes)}
         end
       {:error, errors} ->
         {:error, errors}
@@ -115,14 +113,10 @@ defmodule Construct.Cast do
     types = convert_types(types)
     permitted = Map.keys(types)
 
-    {changes, errors, valid?} =
-      Enum.reduce(permitted, {%{}, %{}, true},
-                  &process_param(&1, params, types, empty_values, opts, &2))
-
-    if valid? do
-      {:ok, changes}
-    else
-      {:error, errors}
+    case Enum.reduce(permitted, {%{}, %{}, true},
+                     &process_param(&1, params, types, empty_values, opts, &2)) do
+      {changes, _errors, true} -> {:ok, changes}
+      {_changes, errors, false} -> {:error, errors}
     end
   end
 
@@ -138,28 +132,35 @@ defmodule Construct.Cast do
         raise Construct.MakeError, "expected params to be a map or keyword list with atom or string keys, " <>
                                    "got a map with mixed keys: #{inspect(params)}"
 
+      ({key, value}, nil) when is_atom(key) ->
+        [{Atom.to_string(key), value}]
+
       ({key, value}, acc) when is_atom(key) ->
-        Map.put(acc || %{}, Atom.to_string(key), value)
+        [{Atom.to_string(key), value} | acc]
 
       (invalid_kv, _acc) ->
         raise Construct.MakeError, "expected params to be a {key, value} structure, got: #{inspect(invalid_kv)}"
 
-    end) || params
+    end)
+    |> case do
+         nil -> params
+         list -> Enum.into(list, %{})
+       end
   end
 
   defp convert_types(types) when is_map(types) do
     types
   end
   defp convert_types(types) when is_list(types) do
-    types |> Enum.into(%{}) |> convert_types()
+    Enum.into(types, %{})
   end
   defp convert_types(invalid_types) do
     raise Construct.Error, "expected types to be a {key, value} structure, got: #{inspect(invalid_types)}"
   end
 
   defp process_param(key, params, types, empty_values, opts, {changes, errors, valid?}) do
-    {key, param_key} = cast_key(key)
-    {type, type_opts} = type!(types, key)
+    param_key = Atom.to_string(key)
+    {type, type_opts} = type!(key, types)
 
     case cast_field(param_key, type, type_opts, params, empty_values, opts) do
       {:ok, value} ->
@@ -169,45 +170,36 @@ defmodule Construct.Cast do
     end
   end
 
-  defp type!(types, key) do
-    case Map.fetch(types, key) do
-      {:ok, {type, []}} -> {type, []}
-      {:ok, {type, [{_,_}|_] = type_opts}} -> {type, type_opts}
-      {:ok, type} -> {type, []}
-      :error -> raise Construct.Error, "unknown field `#{key}`"
+  defp type!(key, types) do
+    case types do
+      %{^key => {type, []}} -> {type, []}
+      %{^key => {type, [{_,_}|_] = type_opts}} -> {type, type_opts}
+      %{^key => type} -> {type, []}
+      _ -> raise Construct.Error, "unknown field `#{key}`"
     end
-  end
-
-  defp cast_key(key) when is_binary(key) do
-    try do
-      {String.to_existing_atom(key), key}
-    rescue
-      ArgumentError ->
-        raise Construct.Error, "could not convert the parameter `#{key}` into an atom, " <>
-                               "`#{key}` is not a structure field"
-    end
-  end
-  defp cast_key(key) when is_atom(key) do
-    {key, Atom.to_string(key)}
   end
 
   defp cast_field(param_key, type, type_opts, params, empty_values, opts) do
     default_value = Keyword.get(type_opts, :default, @default_value)
 
-    case Map.fetch(params, param_key) do
-      {:ok, value} when default_value != @default_value and value == default_value ->
+    case params do
+      %{^param_key => value} when default_value != @default_value and value == default_value ->
         {:ok, value}
-      {:ok, value} ->
+
+      %{^param_key => value} ->
         if value in empty_values do
           {:error, :missing}
         else
           cast_field_value(type, value, empty_values, opts)
         end
-      :error ->
-        case Keyword.fetch(type_opts, :default) do
-          {:ok, value} -> {:ok, value}
-          :error -> {:error, :missing}
+
+      _ ->
+        if default_value == @default_value do
+          {:error, :missing}
+        else
+          {:ok, default_value}
         end
+
     end
   end
 
@@ -227,12 +219,5 @@ defmodule Construct.Cast do
         raise Construct.MakeError, "expected #{inspect(type)} to return {:ok, term} | {:error, term} | :error, " <>
                                    "got an unexpected value: `#{inspect(any)}`"
     end
-  end
-
-  defp apply_changes(struct, changes) when changes == %{} do
-    struct
-  end
-  defp apply_changes(struct, changes) do
-    Kernel.struct(struct, changes)
   end
 end
