@@ -40,12 +40,12 @@ defmodule Construct.Integration.BuildTest do
 
   test "include other structure" do
     include1_module = create_construct do
-      field :a
+      field :a, :string, default: nil
       field :b
     end
 
     include2_module = create_construct do
-      field :c
+      field :c, :integer, custom_option: 42
       field :d
     end
 
@@ -59,7 +59,8 @@ defmodule Construct.Integration.BuildTest do
 
     module_name = name(module)
 
-    assert %{a: :string, b: :string, c: :string, d: :string} == module_name.__structure__(:types)
+    assert %{a: {:string, [default: nil]}, b: {:string, []}, c: {:integer, [custom_option: 42]}, d: {:string, []}}
+        == module_name.__construct__(:types)
   end
 
   test "make nested fields" do
@@ -76,10 +77,10 @@ defmodule Construct.Integration.BuildTest do
     assert {:ok, root = %{parent: parent = %{nested_struct: nested = %{SOME_OF_1: some = %{c: "test"}}}}}
          = make(module, %{parent: %{nested_struct: %{SOME_OF_1: %{c: "test"}}}})
 
-    assert Construct.Integration.BuildTest_66 == root.__struct__
-    assert Construct.Integration.BuildTest_66.Parent == parent.__struct__
-    assert Construct.Integration.BuildTest_66.Parent.NestedStruct == nested.__struct__
-    assert Construct.Integration.BuildTest_66.Parent.NestedStruct.SOME_OF1 == some.__struct__
+    assert Construct.Integration.BuildTest_67 == root.__struct__
+    assert Construct.Integration.BuildTest_67.Parent == parent.__struct__
+    assert Construct.Integration.BuildTest_67.Parent.NestedStruct == nested.__struct__
+    assert Construct.Integration.BuildTest_67.Parent.NestedStruct.SOME_OF1 == some.__struct__
   end
 
   test "raise when try to use non-atom field name" do

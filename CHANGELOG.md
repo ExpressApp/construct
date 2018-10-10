@@ -3,11 +3,17 @@
 ## v2.0.0
 
 * Enhancements
-  * Structs created from `struct/1,2` and `make/1,2` are now equal
-  * Structs that have required fields returns error when creating from `struct/1,2`
+  * Structs created from `Kernel.struct/1,2` and `make/1,2` are now equal
+  * Structs with required fields return error when creating from `Kernel.struct/1,2`
+  * `__construct__(:types)` returns types with defined options `%{name => {type, opts}}`
+  * Improve decimals and datetimes handling
+  * Performance of `Construct.Cast` is increased by almost 1.5x times
 
 * Bug fixes
   * Fix define structure via using
+
+* Hard-deprecations
+  * Remove `__structure__/1` and `__structure__/2`, use `__construct__(:types)` instead
 
 ## v1.2.0
 
