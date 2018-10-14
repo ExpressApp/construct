@@ -101,13 +101,19 @@ defmodule Construct.Integration.BuildTest do
     end)
   end
 
-  test "raise when trying to use function as default argument" do
-    assert_raise(Construct.DefinitionError, ~s(default value cannot to be a function), fn ->
+  test "raise when trying to use function with non-zero arity as default argument" do
+    assert_raise(Construct.DefinitionError, ~s(functions in default values should be zero-arity), fn ->
       defmodule M do
-        use Construct
+        use Construct do
+          field :err, :integer, default: fn(_, _) -> 42 end
+        end
+      end
+    end)
 
-        structure do
-          field :err, :integer, default: fn -> 42 end
+    assert_raise(Construct.DefinitionError, ~s(functions in default values should be zero-arity), fn ->
+      defmodule N do
+        use Construct do
+          field :err, :integer, default: fn(_) -> 42 end
         end
       end
     end)

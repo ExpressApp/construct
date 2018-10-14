@@ -47,6 +47,12 @@ defmodule Construct.Integration.StructTest do
     end
   end
 
+  defmodule Test4 do
+    use Construct do
+      field :a, :string, default: &Time.utc_now/0
+    end
+  end
+
   test "struct should be equal with make" do
     assert struct!(Test0) == Test0.make!()
   end
@@ -84,6 +90,12 @@ defmodule Construct.Integration.StructTest do
     end)
 
     assert {:error, %{c: :missing}} == Test1.A.B.make()
+
+    assert_raise(ArgumentError, enforce_keys_message(Test4, [:a]), fn ->
+      struct!(Test4)
+    end)
+
+    assert {:ok, %Test4{a: %Time{}}} = Test4.make()
   end
 
   test "cycle deps" do

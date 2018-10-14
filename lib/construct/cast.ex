@@ -197,10 +197,17 @@ defmodule Construct.Cast do
         if default_value == @default_value do
           {:error, :missing}
         else
-          {:ok, default_value}
+          {:ok, cast_default_value(default_value)}
         end
 
     end
+  end
+
+  defp cast_default_value(value) when is_function(value, 0) do
+    value.()
+  end
+  defp cast_default_value(value) do
+    value
   end
 
   defp cast_field_value(type, value, empty_values, opts) do

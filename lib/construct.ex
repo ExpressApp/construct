@@ -178,12 +178,19 @@ defmodule Construct do
 
   @doc false
   def __defstruct__(construct_fields, construct_fields_enforce) do
-    construct_fields = Enum.uniq_by(construct_fields, fn({k, _v}) -> k end)
-    construct_fields_enforce = Enum.uniq(construct_fields_enforce)
+    {fields, enforce_fields} =
+      Enum.reduce(construct_fields, {[], construct_fields_enforce}, fn
+        ({key, value}, {fields, enforce}) when is_function(value) ->
+          {[{key, nil} | fields], [key | enforce]}
+
+        (field, {fields, enforce}) ->
+          {[field | fields], enforce}
+
+      end)
 
     quote do
-      @enforce_keys unquote(construct_fields_enforce)
-      defstruct unquote(Macro.escape(construct_fields))
+      @enforce_keys unquote(enforce_fields)
+      defstruct unquote(Macro.escape(fields))
     end
   end
 
@@ -311,8 +318,11 @@ defmodule Construct do
     check_default!(Keyword.get(opts, :default, @no_default))
   end
 
+  defp check_default!(default) when is_function(default, 0) do
+    default
+  end
   defp check_default!(default) when is_function(default) do
-    raise Construct.DefinitionError, "default value cannot to be a function"
+    raise Construct.DefinitionError, "functions in default values should be zero-arity"
   end
   defp check_default!(default) do
     default
