@@ -17,6 +17,9 @@ defmodule Construct.MakeError do
     %__MODULE__{message: inspect(reason)}
   end
 
+  defp traverse_errors(reason, params) when is_list(params) do
+    traverse_errors(reason, Enum.into(params, %{}))
+  end
   defp traverse_errors(reason, params) do
     Enum.reduce(reason, %{}, fn
       ({field, error}, acc) when is_map(error) ->

@@ -323,6 +323,10 @@ defmodule Construct.Integration.MakeTest do
       make!(module, %{a: "a"})
     end)
 
+    assert_raise(Construct.MakeError, ~s(%{b: {:missing, nil}}), fn ->
+      make!(module, [a: "a"])
+    end)
+
     assert_raise(Construct.MakeError, ~s(%{b: %{c: {:missing, nil}}}), fn ->
       make!(module, %{a: "a", b: %{}})
     end)
