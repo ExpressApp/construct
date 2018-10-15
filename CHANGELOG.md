@@ -3,6 +3,7 @@
 ## v2.0.0
 
 * Enhancements
+  * Functions as default values
   * Structs created from `Kernel.struct/1,2` and `make/1,2` are now equal
   * Structs with required fields return error when creating from `Kernel.struct/1,2`
   * `__construct__(:types)` returns types with defined options `%{name => {type, opts}}`

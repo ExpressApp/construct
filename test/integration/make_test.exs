@@ -116,6 +116,16 @@ defmodule Construct.Integration.MakeTest do
     assert {:ok, %{key: %{}}} = make(module, %{key: %{}})
   end
 
+  test "field with function as default value" do
+    module = create_construct do
+      field :a, :utc_datetime, default: &NaiveDateTime.utc_now/0
+    end
+
+    assert {:ok, struct1} = make(module, %{})
+    assert {:ok, struct2} = make(module, %{})
+    refute struct1 == struct2
+  end
+
   test "field with custom type (Construct.Type, when error may have reason)" do
     module = create_construct do
       field :key, CustomType

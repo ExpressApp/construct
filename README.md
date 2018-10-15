@@ -146,7 +146,7 @@ end
 
 defmodule Timestamps do
   use Construct do
-    field :inserted_at, :utc_datetime
+    field :created_at, :utc_datetime, default: &DateTime.utc_now/0
     field :updated_at, :utc_datetime, default: nil
   end
 end
@@ -160,9 +160,14 @@ defmodule User do
   end
 end
 
-iex> User.make(%{name: "John Doe", inserted_at: "2015-01-23 23:50:07", primary_key: 42})
+iex> User.make(%{name: "John Doe", primary_key: 42})
 {:ok,
- %User{inserted_at: #DateTime<2015-01-23 23:50:07Z>, name: "John Doe",
+ %User{created_at: #DateTime<2018-10-14 20:43:06.595119Z>, name: "John Doe",
+  primary_key: 42, updated_at: nil}}
+
+iex> User.make(%{name: "John Doe", created_at: "2015-01-23 23:50:07", primary_key: 42})
+{:ok,
+ %User{created_at: #DateTime<2015-01-23 23:50:07Z>, name: "John Doe",
   primary_key: 42, updated_at: nil}}
 ```
 
