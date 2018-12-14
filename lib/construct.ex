@@ -31,7 +31,17 @@ defmodule Construct do
   @no_default :__construct_no_default__
 
   @doc false
-  defmacro __using__(opts \\ []) do
+  defmacro __using__(opts \\ [])
+
+  defmacro __using__({:%{}, _, _} = types) do
+    quote do
+      use Construct do
+        unquote(__ast_from_types__(types))
+      end
+    end
+  end
+
+  defmacro __using__(opts) when is_list(opts) do
     {definition, opts} = Keyword.pop(opts, :do)
 
     pre_ast =
@@ -203,6 +213,24 @@ defmodule Construct do
   """
   def construct_definition?(module) do
     Code.ensure_compiled?(module) && function_exported?(module, :__construct__, 1)
+  end
+
+  @doc false
+  def __ast_from_types__({:%{}, _, types}) do
+    Enum.reduce(Enum.reverse(types), [], fn
+      ({name, {{:%{}, _, _} = types, opts}}, acc) ->
+        [{:field, [], [name, opts, [do: {:__block__, [], __ast_from_types__(types)}]]} | acc]
+
+      ({name, {:%{}, _, _} = types}, acc) ->
+        [{:field, [], [name, [], [do: {:__block__, [], __ast_from_types__(types)}]]} | acc]
+
+      ({name, {type, opts}}, acc) ->
+        [{:field, [], [name, type, opts]} | acc]
+
+      ({name, type}, acc) ->
+        [{:field, [], [name, type, []]} | acc]
+
+    end)
   end
 
   @doc false

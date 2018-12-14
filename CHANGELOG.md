@@ -4,6 +4,7 @@
 
 * Enhancements
   * Add `Construct.types_of/1`
+  * Support to build Construct definitions from raw types
   * Support nested types in `Construct.Cast.make/3`
 
 ## v2.0.0
