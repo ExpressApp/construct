@@ -86,5 +86,27 @@ defmodule Construct.CastTest do
       assert {:ok, %{foo: 1}} == Cast.make(types, %{"foo" => 1})
       assert {:ok, %{foo: nil}} == Cast.make(types, %{"foo" => nil})
     end
+
+    test "with nested types" do
+      assert {:ok, %{foo: %{bar: %{baz: "test"}}}}
+          == Cast.make(%{foo: %{bar: %{baz: :string}}}, %{"foo" => %{"bar" => %{"baz" => "test"}}})
+
+      assert {:error, %{foo: %{bar: :missing}}}
+          == Cast.make(%{foo: %{bar: %{baz: :string}}}, %{"foo" => %{}})
+
+      assert {:error, %{foo: %{bar: :invalid}}}
+          == Cast.make(%{foo: %{bar: %{baz: :string}}}, %{"foo" => %{"bar" => 42}})
+    end
+
+    test "with nested types and keywords as params" do
+      assert {:ok, %{foo: %{bar: %{baz: "test"}}}}
+          == Cast.make(%{foo: %{bar: %{baz: :string}}}, [foo: [bar: [baz: "test"]]])
+
+      assert {:error, %{foo: %{bar: :missing}}}
+          == Cast.make(%{foo: %{bar: %{baz: :string}}}, [foo: %{}])
+
+      assert {:error, %{foo: %{bar: :invalid}}}
+          == Cast.make(%{foo: %{bar: %{baz: :string}}}, [foo: [bar: 42]])
+    end
   end
 end

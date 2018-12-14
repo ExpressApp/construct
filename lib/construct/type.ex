@@ -153,6 +153,14 @@ defmodule Construct.Type do
 
   def cast(type, term)
 
+  def cast(types, term) when is_map(types) do
+    if is_map(term) or is_list(term) do
+      Construct.Cast.make(types, term)
+    else
+      :error
+    end
+  end
+
   def cast(types, term) when is_list(types) do
     Enum.reduce(types, {:ok, term}, fn
       (type, {:ok, term}) -> cast(type, term)

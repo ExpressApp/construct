@@ -2,6 +2,9 @@
 
 ## v2.1.0-dev
 
+* Enhancements
+  * Support nested types in `Construct.Cast.make/3`
+
 ## v2.0.0
 
 * Enhancements

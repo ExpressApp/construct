@@ -49,6 +49,9 @@ defmodule Construct.Cast do
       iex> make(types, %{title: "article", comments: ["awesome", "great!", "whoa!"]})
       {:ok, %{title: "article", comments: ["awesome", "great!", "whoa!"]}}
 
+      iex> make(%{user: %{name: :string, age: {:integer, default: 21}}}, %{"user" => %{"name" => "john"}})
+      {:ok, %{user: %{name: "john", age: 21}}}
+
   Options:
 
     * `make_map` — return result as map instead of structure, defaults to false;
