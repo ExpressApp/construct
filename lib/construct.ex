@@ -176,6 +176,35 @@ defmodule Construct do
   """
   @callback cast(params :: map, opts :: Keyword.t) :: {:ok, t} | {:error, term}
 
+  @doc """
+  Collects types from defined Construct module to map
+  """
+  def types_of!(module) do
+    if construct_definition?(module) do
+      deep_collect_construct_types(module)
+    else
+      raise ArgumentError, "not a Construct definition"
+    end
+  end
+
+  defp deep_collect_construct_types(module) do
+    Enum.into(module.__construct__(:types), %{}, fn({name, {type, opts}}) ->
+      # check if type is not circular also
+      if module != type && is_atom(type) && construct_definition?(type) do
+        {name, {deep_collect_construct_types(type), opts}}
+      else
+        {name, {type, opts}}
+      end
+    end)
+  end
+
+  @doc """
+  Checks if provided module is Construct definition
+  """
+  def construct_definition?(module) do
+    Code.ensure_compiled?(module) && function_exported?(module, :__construct__, 1)
+  end
+
   @doc false
   def __defstruct__(construct_fields, construct_fields_enforce) do
     {fields, enforce_fields} =
