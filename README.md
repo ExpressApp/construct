@@ -206,11 +206,11 @@ defmodule ComplexDefaults do
   end
 end
 
-iex(6)> %ComplexDefaults{}
+iex> %ComplexDefaults{}
 ** (ArgumentError) the following keys must also be given when building struct ComplexDefaults: [:required]
     expanding struct: ComplexDefaults.__struct__/1
 
-iex(6)> %ComplexDefaults{required: 1}
+iex> %ComplexDefaults{required: 1}
 %ComplexDefaults{
   nested: %ComplexDefaults.Nested{
     key: "nesting 1",
@@ -218,6 +218,56 @@ iex(6)> %ComplexDefaults{required: 1}
   },
   required: 1
 }
+```
+
+> What if I want to use union types?
+
+Use custom types:
+
+```elixir
+defmodule User do
+  use Construct do
+    field :id, :integer
+    field :name
+    field :age, :integer
+  end
+end
+
+defmodule Bot do
+  use Construct do
+    field :id, :integer
+    field :name
+    field :version
+  end
+end
+
+defmodule Author do
+  @behaviour Construct.Type
+
+  # here's the trick, just choose the type by yourself, based on keys or value in specific field.
+  # but be careful, because there can be atoms and strings in keys!
+  def cast(%{"age" => _} = v), do: User.make(v)
+  def cast(%{"version" => _} = v), do: Bot.make(v)
+  def cast(_), do: :error
+end
+
+defmodule Post do
+  use Construct do
+    field :author, Author
+  end
+end
+
+iex> Post.make(%{"author" => %{}})
+{:error, %{author: :invalid}}
+
+iex>  Post.make(%{"author" => %{"age" => "420"}})
+{:error, %{author: %{id: :missing, name: :missing}}}
+
+iex> Post.make(%{"author" => %{"id" => "42", "name" => "john doe", "age" => "420"}})
+{:ok, %Post{author: %User{age: 420, id: 42, name: "john doe"}}}
+
+iex> Post.make(%{"author" => %{"id" => "42", "name" => "john doe", "version" => "1.0.0"}})
+{:ok, %Post{author: %Bot{id: 42, name: "john doe", version: "1.0.0"}}}
 ```
 
 ## Types
