@@ -1,8 +1,9 @@
 ## Changelog
 
-## v2.1.0-dev
+## v2.1.0
 
 * Enhancements
+  * Derive inheritance
   * Add `Construct.types_of/1`
   * Support to build Construct definitions from raw types
   * Support nested types in `Construct.Cast.make/3`
