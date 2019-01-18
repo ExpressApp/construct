@@ -33,7 +33,8 @@ defmodule Construct.Mixfile do
       {:decimal, "~> 1.5", only: [:dev, :test]},
       {:benchfella, "~> 0.3", only: [:dev, :test]},
       {:earmark, "~> 1.2", only: :dev},
-      {:ex_doc, "~> 0.19", only: :dev}
+      {:ex_doc, "~> 0.19", only: :dev},
+      {:jason, "~> 1.1", only: :test}
     ]
   end
 

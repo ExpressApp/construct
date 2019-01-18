@@ -304,22 +304,29 @@ defmodule Construct do
     nested_module_name = String.to_atom(Macro.camelize(Atom.to_string(name)))
 
     quote do
+      opts = unquote(opts)
+
       current_module_name_ast =
         __MODULE__
         |> Atom.to_string()
         |> String.split(".")
         |> Enum.map(&String.to_atom/1)
 
+      derives = Keyword.get(opts, :derive, Module.get_attribute(__MODULE__, :derive))
+
       current_module_ast =
         {:__aliases__, [alias: false], current_module_name_ast ++ [unquote(nested_module_name)]}
         |> Macro.expand(__ENV__)
 
       defmodule current_module_ast do
-        use Construct
-        structure do: unquote(contents)
+        @derive derives
+
+        use Construct do
+          unquote(contents)
+        end
       end
 
-      Construct.__field__(__MODULE__, unquote(name), current_module_ast, unquote(opts))
+      Construct.__field__(__MODULE__, unquote(name), current_module_ast, opts)
     end
   end
 
