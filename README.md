@@ -80,7 +80,9 @@ iex> Quiz.make(%{user_id: 42, answers: ["yes", "no", "no", "yes"]})
 {:ok, %Quiz{answers: [true, false, false, true], user_id: 42}}
 ```
 
-What if we need to parse 'optimized' query string from URL, like list of user ids separated by a comma? Do we need to create a custom type for each boxed type? No! Just use type composition feature:
+> What if we need to parse 'optimized' query string from URL, like list of user ids separated by a comma? Do we need to create a custom type for each boxed type?
+
+No! Just use type composition feature:
 
 ```elixir
 defmodule CommaList do
@@ -260,7 +262,7 @@ end
 iex> Post.make(%{"author" => %{}})
 {:error, %{author: :invalid}}
 
-iex>  Post.make(%{"author" => %{"age" => "420"}})
+iex> Post.make(%{"author" => %{"age" => "420"}})
 {:error, %{author: %{id: :missing, name: :missing}}}
 
 iex> Post.make(%{"author" => %{"id" => "42", "name" => "john doe", "age" => "420"}})
@@ -268,6 +270,37 @@ iex> Post.make(%{"author" => %{"id" => "42", "name" => "john doe", "age" => "420
 
 iex> Post.make(%{"author" => %{"id" => "42", "name" => "john doe", "version" => "1.0.0"}})
 {:ok, %Post{author: %Bot{id: 42, name: "john doe", version: "1.0.0"}}}
+```
+
+> How can I serialize my structures with Jason?
+
+Use `@derive` attribute and `derive` option for nested fields:
+
+```elixir
+defmodule Server do
+  @derive {Jason.Encoder, only: [:name, :operating_system]}
+
+  use Construct do
+    field :name
+    field :password
+
+    field :operating_system, derive: Jason.Encoder do
+      field :name, :string
+      field :arch, :string, default: "x86"
+    end
+  end
+end
+
+iex> {:ok, server} = Server.make(name: "example", password: "secret", operating_system: %{name: "MacOS"})
+{:ok,
+ %Server{
+   name: "example",
+   operating_system: %Server.OperatingSystem{arch: "x86", name: "MacOS"},
+   password: "secret"
+ }}
+
+iex> Jason.encode!(server)
+"{\"name\":\"example\",\"operating_system\":{\"arch\":\"x86\",\"name\":\"MacOS\"}}"
 ```
 
 ## Types
