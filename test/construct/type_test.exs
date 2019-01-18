@@ -317,7 +317,7 @@ defmodule Construct.TypeTest do
       assert :error
           == Type.cast(:naive_datetime, %{year: 2015, month: 1, day: 23, hour: 23, minute: nil})
       assert {:ok, ~N[1970-01-01 00:00:10]}
-          == Type.cast(:naive_datetime, DateTime.from_unix!(10, :seconds))
+          == Type.cast(:naive_datetime, DateTime.from_unix!(10, :second))
       assert :error
           == Type.cast(:naive_datetime, @time)
       assert :error
@@ -326,10 +326,10 @@ defmodule Construct.TypeTest do
           == Type.cast(:naive_datetime, nil)
     end
 
-    @datetime DateTime.from_unix!(1422057007, :seconds)
-    @datetime_zero DateTime.from_unix!(1422057000, :seconds)
-    @datetime_usec DateTime.from_unix!(1422057007008000, :microseconds)
-    @datetime_leapyear DateTime.from_unix!(951868207, :seconds)
+    @datetime DateTime.from_unix!(1422057007, :second)
+    @datetime_zero DateTime.from_unix!(1422057000, :second)
+    @datetime_usec DateTime.from_unix!(1422057007008000, :microsecond)
+    @datetime_leapyear DateTime.from_unix!(951868207, :second)
 
     test ":utc_datetime" do
       assert {:ok, @datetime}
