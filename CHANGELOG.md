@@ -1,5 +1,10 @@
 ## Changelog
 
+## v2.1.1
+
+* Bug fixes
+  * Fix default values retriever for construct modules as types
+
 ## v2.1.0
 
 * Enhancements
