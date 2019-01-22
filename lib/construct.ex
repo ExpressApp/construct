@@ -407,6 +407,7 @@ defmodule Construct do
   end
 
   defp construct_module?(module) do
-    Agent.get(@type_checker_name, &MapSet.member?(&1, module))
+    Agent.get(@type_checker_name, &MapSet.member?(&1, module)) ||
+      Code.ensure_compiled?(module) && function_exported?(module, :__construct__, 1)
   end
 end
