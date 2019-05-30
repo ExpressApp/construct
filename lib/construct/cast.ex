@@ -126,7 +126,7 @@ defmodule Construct.Cast do
   defp convert_params(%{__struct__: _} = params) do
     convert_params(Map.from_struct(params))
   end
-  defp convert_params(params) do
+  defp convert_params(params) when is_list(params) or is_map(params) do
     Enum.reduce(params, nil, fn
       ({key, _value}, nil) when is_binary(key) ->
         nil
@@ -149,6 +149,9 @@ defmodule Construct.Cast do
          nil -> params
          list -> Enum.into(list, %{})
        end
+  end
+  defp convert_params(params) do
+    params
   end
 
   defp convert_types(types) when is_map(types) do

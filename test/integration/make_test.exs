@@ -34,6 +34,23 @@ defmodule Construct.Integration.MakeTest do
     assert {:ok, %{key: ["test1", "test2"]}} = make(module, %{key: ["test1", "test2"]})
   end
 
+  test "field with type `{:array, CustomType}`" do
+    embedded_module = create_construct do
+      field :a
+      field :b
+    end
+
+    embedded = name(embedded_module)
+
+    module = create_construct do
+      field :key, {:array, embedded}
+    end
+
+    assert {:ok, %{key: [%{a: "a", b: "b"}]}} = make(module, %{key: [%{"a" => "a", "b" => "b"}]})
+    assert {:error, %{key: %{b: :missing}}} = make(module, %{key: [%{"a" => "a"}]})
+    assert {:error, %{key: %{a: :missing, b: :missing}}} = make(module, %{key: ["test1", "test2"]})
+  end
+
   test "field with type `{:map, t}`" do
     module = create_construct do
       field :key, {:map, :string}
