@@ -1,5 +1,10 @@
 ## Changelog
 
+## v2.1.3
+
+* Enhancements
+  * Add `:pid` and `:reference` types
+
 ## v2.1.2
 
 * Bug fixes
