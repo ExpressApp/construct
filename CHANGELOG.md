@@ -1,5 +1,10 @@
 ## Changelog
 
+## v2.1.2
+
+* Bug fixes
+  * Fix case when non-enumerable values passed in array struct
+
 ## v2.1.1
 
 * Bug fixes
