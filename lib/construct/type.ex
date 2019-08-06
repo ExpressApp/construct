@@ -18,13 +18,16 @@ defmodule Construct.Type do
   @type t       :: builtin | custom | list(builtin | custom)
   @type custom  :: module | Construct.t
   @type builtin :: :integer | :float | :boolean | :string |
-                   :binary | :decimal | :utc_datetime |
+                   :binary | :pid | :reference | :decimal | :utc_datetime |
                    :naive_datetime | :date | :time | :any |
                    :array | {:array, t} | :map | {:map, t} | :struct
 
   @type cast_ret :: {:ok, term} | {:error, term} | :error
 
-  @builtin ~w(integer float boolean string binary decimal utc_datetime naive_datetime date time any array map struct)a
+  @builtin ~w(
+    integer float boolean string binary pid reference decimal
+    utc_datetime naive_datetime date time any array map struct
+  )a
 
   @doc """
   Casts the given input to the custom type.
@@ -186,6 +189,10 @@ defmodule Construct.Type do
 
   def cast(:boolean, term) when term in ~w(true 1),  do: {:ok, true}
   def cast(:boolean, term) when term in ~w(false 0), do: {:ok, false}
+
+  def cast(:pid, term) when is_pid(term), do: {:ok, term}
+
+  def cast(:reference, term) when is_reference(term), do: {:ok, term}
 
   def cast(:decimal, term) when is_binary(term) do
     apply(Decimal, :parse, [term])
