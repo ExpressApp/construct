@@ -390,5 +390,25 @@ defmodule Construct.TypeTest do
       assert :error
           == Type.cast(:utc_datetime, nil)
     end
+
+    test ":pid" do
+      assert {:ok, self()}
+          == Type.cast(:pid, self())
+      assert :error
+          == Type.cast(:pid, "#{inspect(self())}")
+      assert :error
+          == Type.cast(:pid, 123)
+    end
+
+    test ":reference" do
+      ref = make_ref()
+
+      assert {:ok, ref}
+          == Type.cast(:reference, ref)
+      assert :error
+          == Type.cast(:reference, "#{inspect(ref)}")
+      assert :error
+          == Type.cast(:reference, 123)
+    end
   end
 end
