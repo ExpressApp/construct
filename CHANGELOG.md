@@ -1,5 +1,10 @@
 ## Changelog
 
+## v2.1.4
+
+* Bug fixes
+  * Ensure module is trying to be compiled when checking that if this module is Construct definition
+
 ## v2.1.3
 
 * Enhancements
