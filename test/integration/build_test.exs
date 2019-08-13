@@ -120,19 +120,19 @@ defmodule Construct.Integration.BuildTest do
   end
 
   test "raise when trying to use undefined module as custom type" do
-    assert_raise(Construct.DefinitionError, ~s(undefined module Elixir.UndefinedModule), fn ->
+    assert_raise(Construct.DefinitionError, ~s(undefined module UndefinedModule), fn ->
       create_construct do
         field :key, UndefinedModule
       end
     end)
 
-    assert_raise(Construct.DefinitionError, ~s(undefined module Elixir.UndefinedModule), fn ->
+    assert_raise(Construct.DefinitionError, ~s(undefined module UndefinedModule), fn ->
       create_construct do
         field :key, {:array, UndefinedModule}
       end
     end)
 
-    assert_raise(Construct.DefinitionError, ~s(undefined module Elixir.UndefinedModule), fn ->
+    assert_raise(Construct.DefinitionError, ~s(undefined module UndefinedModule), fn ->
       create_construct do
         field :key, {:map, UndefinedModule}
       end
@@ -144,13 +144,13 @@ defmodule Construct.Integration.BuildTest do
       end
     end)
 
-    assert_raise(Construct.DefinitionError, ~s(undefined module Elixir.UndefinedModule), fn ->
+    assert_raise(Construct.DefinitionError, ~s(undefined module UndefinedModule), fn ->
       create_construct do
         field :key, [UndefinedModule]
       end
     end)
 
-    assert_raise(Construct.DefinitionError, ~s(undefined module Elixir.UndefinedModule), fn ->
+    assert_raise(Construct.DefinitionError, ~s(undefined module UndefinedModule), fn ->
       create_construct do
         field :key, [CustomType, UndefinedModule]
       end
@@ -158,19 +158,19 @@ defmodule Construct.Integration.BuildTest do
   end
 
   test "raise when trying to use custom type that doesn't have cast/1 function" do
-    assert_raise(Construct.DefinitionError, ~s(undefined function cast/1 for Elixir.CustomTypeEmpty), fn ->
+    assert_raise(Construct.DefinitionError, ~s(undefined function cast/1 for CustomTypeEmpty), fn ->
       create_construct do
         field :key, CustomTypeEmpty
       end
     end)
 
-    assert_raise(Construct.DefinitionError, ~s(undefined function cast/1 for Elixir.CustomTypeEmpty), fn ->
+    assert_raise(Construct.DefinitionError, ~s(undefined function cast/1 for CustomTypeEmpty), fn ->
       create_construct do
         field :key, {:array, CustomTypeEmpty}
       end
     end)
 
-    assert_raise(Construct.DefinitionError, ~s(undefined function cast/1 for Elixir.CustomTypeEmpty), fn ->
+    assert_raise(Construct.DefinitionError, ~s(undefined function cast/1 for CustomTypeEmpty), fn ->
       create_construct do
         field :key, {:map, CustomTypeEmpty}
       end
@@ -182,13 +182,13 @@ defmodule Construct.Integration.BuildTest do
       end
     end)
 
-    assert_raise(Construct.DefinitionError, ~s(undefined function cast/1 for Elixir.CustomTypeEmpty), fn ->
+    assert_raise(Construct.DefinitionError, ~s(undefined function cast/1 for CustomTypeEmpty), fn ->
       create_construct do
         field :key, [CustomTypeEmpty]
       end
     end)
 
-    assert_raise(Construct.DefinitionError, ~s(undefined function cast/1 for Elixir.CustomTypeEmpty), fn ->
+    assert_raise(Construct.DefinitionError, ~s(undefined function cast/1 for CustomTypeEmpty), fn ->
       create_construct do
         field :key, [CustomType, CustomTypeEmpty]
       end
@@ -196,7 +196,7 @@ defmodule Construct.Integration.BuildTest do
   end
 
   test "raise when trying to include undefined module" do
-    assert_raise(Construct.DefinitionError, ~s(undefined module Elixir.UndefinedModule), fn ->
+    assert_raise(Construct.DefinitionError, ~s(undefined module UndefinedModule), fn ->
       create_construct do
         include UndefinedModule
       end
@@ -204,7 +204,7 @@ defmodule Construct.Integration.BuildTest do
   end
 
   test "raise when trying to include invalid structure (some module)" do
-    assert_raise(Construct.DefinitionError, ~s(provided Elixir.CustomTypeEmpty is not Construct module), fn ->
+    assert_raise(Construct.DefinitionError, ~s(provided CustomTypeEmpty is not Construct module), fn ->
       create_construct do
         include CustomTypeEmpty
       end

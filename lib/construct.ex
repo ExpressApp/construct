@@ -30,6 +30,9 @@ defmodule Construct do
   @type_checker_name Construct.TypeRegistry
   @no_default :__construct_no_default__
 
+  # elixir 1.9.0 do not raise deadlocks for Code.ensure_compiled/1
+  @no_raise_on_deadlocks Version.compare(System.version(), "1.9.0") != :lt
+
   @doc false
   defmacro __using__(opts \\ [])
 
@@ -117,11 +120,11 @@ defmodule Construct do
       module = unquote(struct)
 
       unless Code.ensure_compiled?(module) do
-        raise Construct.DefinitionError, "undefined module #{module}"
+        raise Construct.DefinitionError, "undefined module #{inspect(module)}"
       end
 
       unless function_exported?(module, :__construct__, 1) do
-        raise Construct.DefinitionError, "provided #{module} is not Construct module"
+        raise Construct.DefinitionError, "provided #{inspect(module)} is not Construct module"
       end
 
       Enum.each(module.__construct__(:types), fn({name, {type, opts}}) ->
@@ -354,13 +357,15 @@ defmodule Construct do
   end
 
   defp check_type_complex!(module) do
+    if @no_raise_on_deadlocks, do: Code.ensure_compiled(module)
+
     unless construct_module?(module) do
       unless Code.ensure_compiled?(module) do
-        raise Construct.DefinitionError, "undefined module #{module}"
+        raise Construct.DefinitionError, "undefined module #{inspect(module)}"
       end
 
       unless function_exported?(module, :cast, 1) do
-        raise Construct.DefinitionError, "undefined function cast/1 for #{module}"
+        raise Construct.DefinitionError, "undefined function cast/1 for #{inspect(module)}"
       end
     end
   end
@@ -407,8 +412,6 @@ defmodule Construct do
   end
 
   defp construct_module?(module) do
-    Code.ensure_compiled(module)
-
     Agent.get(@type_checker_name, &MapSet.member?(&1, module)) ||
       Code.ensure_compiled?(module) && function_exported?(module, :__construct__, 1)
   end
