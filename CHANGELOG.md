@@ -1,6 +1,11 @@
 ## Changelog
 
-## v2.1.4
+## v2.1.5
+
+* Bug fixes
+  * Ensure module is compiled when checking for Construct def
+
+## v2.1.4 (retired)
 
 * Bug fixes
   * Ensure module is trying to be compiled when checking that if this module is Construct definition
