@@ -196,7 +196,7 @@ defmodule Construct.Integration.BuildTest do
   end
 
   test "raise when trying to include undefined module" do
-    assert_raise(Construct.DefinitionError, ~s(undefined module UndefinedModule), fn ->
+    assert_raise(Construct.DefinitionError, ~s(provided UndefinedModule is not Construct module), fn ->
       create_construct do
         include UndefinedModule
       end
