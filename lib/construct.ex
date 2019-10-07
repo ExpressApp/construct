@@ -119,11 +119,7 @@ defmodule Construct do
     quote do
       module = unquote(struct)
 
-      unless Code.ensure_compiled?(module) do
-        raise Construct.DefinitionError, "undefined module #{inspect(module)}"
-      end
-
-      unless function_exported?(module, :__construct__, 1) do
+      unless Construct.__is_construct_module__(module) do
         raise Construct.DefinitionError, "provided #{inspect(module)} is not Construct module"
       end
 
@@ -301,6 +297,11 @@ defmodule Construct do
     Agent.update(@type_checker_name, &MapSet.put(&1, module))
   end
 
+  @doc false
+  def __is_construct_module__(module) do
+    construct_module?(module)
+  end
+
   defp make_nested_field(name, contents, opts) do
     check_field_name!(name)
 
@@ -357,8 +358,6 @@ defmodule Construct do
   end
 
   defp check_type_complex!(module) do
-    if @no_raise_on_deadlocks, do: Code.ensure_compiled(module)
-
     unless construct_module?(module) do
       unless Code.ensure_compiled?(module) do
         raise Construct.DefinitionError, "undefined module #{inspect(module)}"
@@ -412,6 +411,8 @@ defmodule Construct do
   end
 
   defp construct_module?(module) do
+    if @no_raise_on_deadlocks, do: Code.ensure_compiled(module)
+
     Agent.get(@type_checker_name, &MapSet.member?(&1, module)) ||
       Code.ensure_compiled?(module) && function_exported?(module, :__construct__, 1)
   end
