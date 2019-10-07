@@ -1,5 +1,10 @@
 ## Changelog
 
+## v2.1.6
+
+* Bug fixes
+  * Ensure module is compiled when checking for Construct def in `include` macro
+
 ## v2.1.5
 
 * Bug fixes
