@@ -271,12 +271,14 @@ defmodule Construct do
 
         type =
           case Keyword.fetch(opts, :default) do
-            {:ok, nil} ->
-              quote do: unquote(type) | nil
+            {:ok, default} ->
+              typeof_default = Construct.Type.typeof(default)
 
-            # TODO recognize type of default value
-            {:ok, _default} ->
-              type
+              if type == typeof_default do
+                type
+              else
+                quote do: unquote(type) | unquote(typeof_default)
+              end
 
             :error ->
               type
