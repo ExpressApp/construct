@@ -61,8 +61,6 @@ defmodule Construct do
 
       unquote(pre_ast)
 
-      @type t :: %__MODULE__{}
-
       def make(params \\ %{}, opts \\ []) do
         Construct.Cast.make(__MODULE__, params, Keyword.merge(opts, unquote(opts)))
       end
@@ -104,7 +102,8 @@ defmodule Construct do
 
       Module.eval_quoted __ENV__, {:__block__, [], [
         Construct.__defstruct__(@construct_fields, @construct_fields_enforce),
-        Construct.__types__(@fields)]}
+        Construct.__types__(@fields),
+        Construct.__typespecs__(@fields)]}
     end
   end
 
@@ -114,7 +113,7 @@ defmodule Construct do
   If included structure is invalid for some reason — this macro throws an
   `Struct.DefinitionError` exception with detailed reason.
   """
-  @spec include(t) :: :ok
+  @spec include(t) :: Macro.t()
   defmacro include(struct) do
     quote do
       module = unquote(struct)
@@ -154,7 +153,7 @@ defmodule Construct do
 
       By default this option is unset. Notice that you can't use functions as a default value.
   """
-  @spec field(atom, Construct.Type.t, Keyword.t) :: :ok
+  @spec field(atom, Construct.Type.t, Keyword.t) :: Macro.t()
   defmacro field(name, type \\ :string, opts \\ [])
   defmacro field(name, opts, [do: _] = contents) do
     make_nested_field(name, contents, opts)
@@ -176,7 +175,7 @@ defmodule Construct do
   @doc """
   Alias to `c:make/2`, but raises an `Construct.MakeError` exception if params have errors.
   """
-  @callback make!(params :: map, opts :: Keyword.t) :: {:ok, t} | {:error, term}
+  @callback make!(params :: map, opts :: Keyword.t) :: t
 
   @doc """
   Alias to `c:make/2`, used to follow `c:Construct.Type.cast/1` callback.
@@ -261,6 +260,42 @@ defmodule Construct do
 
     quote do
       def __construct__(:types), do: unquote(types)
+    end
+  end
+
+  @doc false
+  def __typespecs__(fields) do
+    typespecs =
+      Enum.map(fields, fn({name, type, opts}) ->
+        type = Construct.Type.spec(type)
+
+        type =
+          case Keyword.fetch(opts, :default) do
+            {:ok, default} ->
+              typeof_default = Construct.Type.typeof(default)
+
+              if type == typeof_default do
+                type
+              else
+                quote do: unquote(type) | unquote(typeof_default)
+              end
+
+            :error ->
+              type
+          end
+
+        {name, type}
+      end)
+
+    modulespec =
+      {:%, [],
+        [
+          {:__MODULE__, [], Elixir},
+          {:%{}, [], typespecs}
+        ]}
+
+    quote do
+      @type t :: unquote(modulespec)
     end
   end
 

@@ -121,7 +121,7 @@ defmodule Construct.Type do
       :error
 
   """
-  @spec cast(t, term, options) :: cast_ret
+  @spec cast(t, term, options) :: cast_ret | any
     when options: [make_map: boolean]
 
   def cast({:array, type}, term, opts) when is_list(term) do
@@ -152,7 +152,7 @@ defmodule Construct.Type do
   @doc """
   Behaves like `cast/3`, but without options provided to nested types.
   """
-  @spec cast(t, term) :: cast_ret
+  @spec cast(t, term) :: cast_ret | any
 
   def cast(type, term)
 
@@ -336,10 +336,7 @@ defmodule Construct.Type do
   defp cast_naive_datetime(%{} = map) do
     with {:ok, date} <- cast_date(map),
          {:ok, time} <- cast_time(map) do
-      case NaiveDateTime.new(date, time) do
-        {:ok, _} = ok -> ok
-        {:error, _} -> :error
-      end
+      NaiveDateTime.new(date, time)
     end
   end
   defp cast_naive_datetime(_) do
@@ -375,6 +372,172 @@ defmodule Construct.Type do
       :error ->
         :error
     end
+  end
+
+  ## Typespecs
+
+  @doc """
+  Returns typespec AST for given type
+
+    iex> spec([CommaList, {:array, :integer}]) |> Macro.to_string()
+    "list(:integer)"
+
+    iex> spec({:array, :string}) |> Macro.to_string()
+    "list(String.t())"
+
+    iex> spec({:map, CustomType}) |> Macro.to_string()
+    "%{optional(term) => CustomType.t()}"
+
+    iex> spec(:string) |> Macro.to_string()
+    "String.t()"
+
+    iex> spec(CustomType) |> Macro.to_string()
+    "CustomType.t()"
+  """
+  @spec spec(t) :: Macro.t()
+
+  def spec(type) when is_list(type) do
+    type |> List.last() |> spec()
+  end
+
+  def spec({:array, type}) do
+    quote do
+      list(unquote(spec(type)))
+    end
+  end
+
+  def spec({:map, type}) do
+    quote do
+      %{optional(term) => unquote(spec(type))}
+    end
+  end
+
+  def spec(:string) do
+    quote do
+      String.t()
+    end
+  end
+
+  def spec(:decimal) do
+    quote do
+      Decimal.t()
+    end
+  end
+
+  def spec(:utc_datetime) do
+    quote do
+      DateTime.t()
+    end
+  end
+
+  def spec(:naive_datetime) do
+    quote do
+      NaiveDateTime.t()
+    end
+  end
+
+  def spec(:date) do
+    quote do
+      Date.t()
+    end
+  end
+
+  def spec(:time) do
+    quote do
+      Time.t()
+    end
+  end
+
+  def spec(type) when type in @builtin do
+    type
+  end
+
+  def spec(type) when is_atom(type) do
+    quote do
+      unquote(type).t()
+    end
+  end
+
+  def spec(type) do
+    type
+  end
+
+  @doc """
+  Returns typespec AST for given term
+
+    iex> typeof(nil) |> Macro.to_string()
+    "nil"
+
+    iex> typeof(1.42) |> Macro.to_string()
+    "float()"
+
+    iex> typeof("string") |> Macro.to_string()
+    "String.t()"
+
+    iex> typeof(CustomType) |> Macro.to_string()
+    "CustomType.t()"
+
+    iex> typeof(&NaiveDateTime.utc_now/0) |> Macro.to_string()
+    "NaiveDateTime.t()"
+  """
+  @spec spec(t) :: Macro.t()
+
+  def typeof(term) when is_nil(term) do
+    nil
+  end
+
+  def typeof(term) when is_integer(term) do
+    {:integer, [], []}
+  end
+
+  def typeof(term) when is_float(term) do
+    {:float, [], []}
+  end
+
+  def typeof(term) when is_boolean(term) do
+    {:boolean, [], []}
+  end
+
+  def typeof(term) when is_binary(term) do
+    quote do
+      String.t()
+    end
+  end
+
+  def typeof(term) when is_pid(term) do
+    {:pid, [], []}
+  end
+
+  def typeof(term) when is_reference(term) do
+    {:reference, [], []}
+  end
+
+  def typeof(%{__struct__: struct}) when is_atom(struct) do
+    quote do
+      unquote(struct).t()
+    end
+  end
+
+  def typeof(term) when is_map(term) do
+    {:map, [], []}
+  end
+
+  def typeof(term) when is_atom(term) do
+    quote do
+      unquote(term).t()
+    end
+  end
+
+  def typeof(term) when is_list(term) do
+    {:list, [], []}
+  end
+
+  def typeof(term) when is_function(term, 0) do
+    term.() |> typeof()
+  end
+
+  def typeof(_) do
+    {:term, [], []}
   end
 
   ## Helpers
@@ -421,8 +584,6 @@ defmodule Construct.Type do
   defp map([], _type, _fun, acc, _opts) do
     {:ok, acc}
   end
-
-  defp map(_, _, _, _, _), do: :error
 
   defp to_i(nil), do: nil
   defp to_i(int) when is_integer(int), do: int

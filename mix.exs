@@ -8,6 +8,9 @@ defmodule Construct.Mixfile do
       elixir: "~> 1.4",
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env),
+      dialyzer: [
+        plt_file: {:no_warn, "priv/dialyzer.plt"}
+      ],
 
       # Hex
       description: description(),
@@ -32,6 +35,7 @@ defmodule Construct.Mixfile do
     [
       {:decimal, "~> 1.5", only: [:dev, :test]},
       {:benchfella, "~> 0.3", only: [:dev, :test]},
+      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev, :test], runtime: false},
       {:earmark, "~> 1.2", only: :dev},
       {:ex_doc, "~> 0.19", only: :dev},
       {:jason, "~> 1.1", only: :test}
