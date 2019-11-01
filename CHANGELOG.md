@@ -1,5 +1,10 @@
 ## Changelog
 
+## v2.1.7
+
+* Enhancements
+  * Add typespec generation
+
 ## v2.1.6
 
 * Bug fixes
