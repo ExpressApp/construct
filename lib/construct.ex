@@ -377,13 +377,13 @@ defmodule Construct do
   end
 
   defp check_type!({:array, type}) do
-    unless Construct.Type.primitive?(type), do: check_type_complex!(type)
+    check_type!(type)
   end
   defp check_type!({:map, type}) do
-    unless Construct.Type.primitive?(type), do: check_type_complex!(type)
+    check_type!(type)
   end
-  defp check_type!({complex, _}) do
-    raise Construct.DefinitionError, "undefined complex type #{inspect(complex)}"
+  defp check_type!({typec, _arg}) do
+    check_typec_complex!(typec)
   end
   defp check_type!(type_list) when is_list(type_list) do
     Enum.each(type_list, &check_type!/1)
@@ -393,13 +393,21 @@ defmodule Construct do
   end
 
   defp check_type_complex!(module) do
+    check_type_complex!(module, {:cast, 1})
+  end
+
+  defp check_typec_complex!(module) do
+    check_type_complex!(module, {:castc, 2})
+  end
+
+  defp check_type_complex!(module, {f, a}) do
     unless construct_module?(module) do
       unless Code.ensure_compiled?(module) do
         raise Construct.DefinitionError, "undefined module #{inspect(module)}"
       end
 
-      unless function_exported?(module, :cast, 1) do
-        raise Construct.DefinitionError, "undefined function cast/1 for #{inspect(module)}"
+      unless function_exported?(module, f, a) do
+        raise Construct.DefinitionError, "undefined function #{f}/#{a} for #{inspect(module)}"
       end
     end
   end

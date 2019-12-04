@@ -60,6 +60,51 @@ defmodule Construct.Integration.MakeTest do
     assert {:ok, %{key: %{"k1" => "v1", "k2" => "v2"}}} = make(module, %{key: %{"k1" => "v1", "k2" => "v2"}})
   end
 
+  test "field with type `{t, ...}`" do
+    module = create_construct do
+      field :key, {Nilable, :string}
+    end
+
+    assert {:ok, %{key: nil}} = make(module, %{key: nil})
+    assert {:ok, %{key: "s"}} = make(module, %{key: "s"})
+    assert {:error, %{key: :invalid}} = make(module, %{key: 123})
+    assert {:error, %{key: :missing}} = make(module, %{})
+  end
+
+  test "field with type `{t, [...]}`" do
+    module = create_construct do
+      field :key, {Nilable, [CommaList, {:array, :string}]}
+    end
+
+    assert {:ok, %{key: nil}} = make(module, %{key: nil})
+    assert {:ok, %{key: ["s1", "s2", "s3"]}} = make(module, %{key: "s1,s2,s3"})
+    assert {:error, %{key: :invalid}} = make(module, %{key: 123})
+    assert {:error, %{key: :missing}} = make(module, %{})
+  end
+
+  test "field with type `[t, {t, ...}]`" do
+    module = create_construct do
+      field :key, [:string, {EnumT, ~w(A B C)}]
+    end
+
+    assert {:ok, %{key: "A"}} = make(module, %{key: "a"})
+    assert {:error, %{key: :invalid}} = make(module, %{key: "d"})
+    assert {:error, %{key: :invalid}} = make(module, %{key: 123})
+    assert {:error, %{key: :missing}} = make(module, %{})
+  end
+
+  test "field with type `[t, {:array, {t, ...}}]`" do
+    module = create_construct do
+      field :key, [CommaList, {:array, {EnumT, ~w(A B C)}}]
+    end
+
+    assert {:ok, %{key: ["A"]}} = make(module, %{key: "a"})
+    assert {:ok, %{key: ["A", "C", "B"]}} = make(module, %{key: "a,c,b"})
+    assert {:error, %{key: :invalid}} = make(module, %{key: "a,d"})
+    assert {:error, %{key: :invalid}} = make(module, %{key: 123})
+    assert {:error, %{key: :missing}} = make(module, %{})
+  end
+
   test "field with type `:struct`" do
     nested_module = create_construct do
       field :key

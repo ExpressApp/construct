@@ -29,6 +29,8 @@ defmodule Construct.Type do
     utc_datetime naive_datetime date time any array map struct
   )a
 
+  @builtinc ~w(array map)a
+
   @doc """
   Casts the given input to the custom type.
   """
@@ -53,7 +55,7 @@ defmodule Construct.Type do
       false
   """
   @spec primitive?(t) :: boolean
-  def primitive?({type, _}) when type in @builtin, do: true
+  def primitive?({type, _}) when type in @builtinc, do: true
   def primitive?(type) when type in @builtin, do: true
   def primitive?(_), do: false
 
@@ -132,6 +134,10 @@ defmodule Construct.Type do
     map(Map.to_list(term), type, &cast/3, %{}, opts)
   end
 
+  def cast({typec, arg}, term, _opts) when typec not in @builtinc do
+    typec.castc(term, arg)
+  end
+
   def cast(type, term, opts) when is_atom(type) do
     cond do
       not primitive?(type) ->
@@ -177,6 +183,10 @@ defmodule Construct.Type do
 
   def cast({:map, type}, term) when is_map(term) do
     map(Map.to_list(term), type, &cast/3, %{}, [])
+  end
+
+  def cast({typec, arg}, term) when typec not in @builtinc do
+    typec.castc(term, arg)
   end
 
   def cast(:float, term) when is_binary(term) do
@@ -412,6 +422,12 @@ defmodule Construct.Type do
     end
   end
 
+  def spec({typec, _arg}) do
+    quote do
+      unquote(typec).t()
+    end
+  end
+
   def spec(:string) do
     quote do
       String.t()
@@ -480,7 +496,7 @@ defmodule Construct.Type do
     iex> typeof(&NaiveDateTime.utc_now/0) |> Macro.to_string()
     "NaiveDateTime.t()"
   """
-  @spec spec(t) :: Macro.t()
+  @spec typeof(t) :: Macro.t()
 
   def typeof(term) when is_nil(term) do
     nil

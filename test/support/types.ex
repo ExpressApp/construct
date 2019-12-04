@@ -21,3 +21,24 @@ end
 
 defmodule CustomTypeEmpty do
 end
+
+defmodule Nilable do
+  @behaviour Construct.TypeC
+
+  def castc(nil, _), do: {:ok, nil}
+  def castc(val, type), do: Construct.Type.cast(type, val)
+end
+
+defmodule EnumT do
+  @behaviour Construct.TypeC
+
+  def castc(val, enums) do
+    val = String.upcase(val)
+
+    if val in enums do
+      {:ok, val}
+    else
+      :error
+    end
+  end
+end
