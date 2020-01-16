@@ -238,6 +238,135 @@ defmodule Construct.Integration.MakeTest do
     assert {:ok, %{a: %{b: "test"}}} = make(module, %{a: %{b: "test"}})
   end
 
+  test "make with `error_values` option" do
+    opts = [error_values: true]
+
+    module1 = create_construct do
+      field :key, :string
+    end
+
+    assert {:error, %{key: %{error: :missing, value: nil}}} = make(module1, %{}, opts)
+    assert {:error, %{key: %{error: :invalid, value: nil}}} = make(module1, %{key: nil}, opts)
+    assert {:error, %{key: %{error: :invalid, value: 1.4}}} = make(module1, %{key: 1.4}, opts)
+  end
+
+  test "make with `error_values` option and `{:array, primitive}` type" do
+    opts = [error_values: true]
+
+    module = create_construct do
+      field :nested, {:array, :string}
+    end
+
+    assert {:error, %{nested: %{error: :missing, value: nil, expect: "array of :string is expected"}}}
+        == make(module, %{}, opts)
+
+    assert {:error,
+             %{
+               nested: [
+                 %{error: :error, index: 1, value: %{key: "valid"}},
+                 %{error: :error, index: 3, value: 42}
+               ]
+             }}
+        == make(module, %{nested: ["string", %{key: "valid"}, "string", 42, "string"]}, opts)
+
+    assert {:error,
+             %{
+               nested: [
+                 %{error: :error, index: 0, value: %{key: "valid"}},
+                 %{error: :error, index: 1, value: %{key: :some}},
+                 %{error: :error, index: 2, value: %{key: 42}},
+                 %{error: :error, index: 3, value: %{key: "valid"}}
+               ]
+             }}
+        == make(module, %{nested: [%{key: "valid"}, %{key: :some}, %{key: 42}, %{key: "valid"}]}, opts)
+  end
+
+  test "make with `error_values` option and `{:array, t}` type" do
+    opts = [error_values: true]
+
+    module1 = create_construct do
+      field :key, CustomType
+    end
+
+    module1_type = name(module1)
+
+    module2 = create_construct do
+      field :nested, {:array, module1_type}
+    end
+
+    assert {:error,
+             %{nested: %{error: :missing, value: nil, expect: "array of Construct.Integration.MakeTest_287 is expected"}}}
+        == make(module2, %{}, opts)
+
+    assert {:error,
+             %{
+               nested: [
+                 %{
+                   error: %{key: %{error: :invalid_custom_list, value: "valid", expect: "CustomType is expected"}},
+                   index: 0
+                 },
+                 %{
+                   error: %{key: %{error: :invalid_custom_list, value: :some, expect: "CustomType is expected"}},
+                   index: 1
+                 }
+               ]
+             }}
+        == make(module2, %{nested: [%{key: "valid"}, %{key: :some}]}, opts)
+
+    assert {:error,
+             %{
+               nested: [
+                 %{
+                   error: %{key: %{error: :invalid_custom_list, value: :some, expect: "CustomType is expected"}},
+                   index: 1
+                 },
+                 %{
+                   error: %{key: %{error: :invalid_custom_list, value: 42, expect: "CustomType is expected"}},
+                   index: 2
+                 }
+               ]
+             }}
+        == make(module2, %{nested: [%{key: []}, %{key: :some}, %{key: 42}, %{key: ["valid"]}]}, opts)
+  end
+
+  test "make with `error_values` option and nested struct" do
+    opts = [error_values: true]
+
+    module1 = create_construct do
+      field :key, :string
+    end
+
+    module1_type = name(module1)
+
+    module2 = create_construct do
+      field :nested, module1_type
+    end
+
+    assert {:error, %{nested: %{error: :missing, value: nil}}} = make(module2, %{}, opts)
+    assert {:error, %{nested: %{key: %{error: :missing, value: nil}}}} = make(module2, %{nested: %{}}, opts)
+  end
+
+  test "make with `error_values` option and docs in custom types" do
+    opts = [error_values: true]
+
+    module1 = create_construct do
+      @moduledoc "awesome type"
+      field :key, Comment
+    end
+
+    module1_type = name(module1)
+
+    module2 = create_construct do
+      field :nested, {:array, module1_type}
+    end
+
+    assert {:error, %{nested: %{error: :missing, value: nil, expect: "array of Construct.Integration.MakeTest_352 is expected"}}}
+        == make(module2, %{}, opts)
+
+    assert {:error, %{nested: [%{error: %{key: %{error: :missing, expect: "Comment is expected", value: nil}}, index: 0}]}}
+        == make(module2, %{nested: [1]}, opts)
+  end
+
   test "make with `empty_values` option" do
     opts = [empty_values: [nil, "", "test", 1.42]]
 

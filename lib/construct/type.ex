@@ -127,7 +127,7 @@ defmodule Construct.Type do
     when options: [make_map: boolean]
 
   def cast({:array, type}, term, opts) when is_list(term) do
-    array(term, type, &cast/3, [], opts)
+    array(term, type, &cast/3, opts)
   end
 
   def cast({:map, type}, term, opts) when is_map(term) do
@@ -141,7 +141,7 @@ defmodule Construct.Type do
   def cast(type, term, opts) when is_atom(type) do
     cond do
       not primitive?(type) ->
-        if function_exported?(type, :cast, 2) do
+        if Code.ensure_loaded?(type) && function_exported?(type, :cast, 2) do
           type.cast(term, opts)
         else
           type.cast(term)
@@ -178,7 +178,7 @@ defmodule Construct.Type do
   end
 
   def cast({:array, type}, term) when is_list(term) do
-    array(term, type, &cast/3, [], [])
+    array(term, type, &cast/3, [])
   end
 
   def cast({:map, type}, term) when is_map(term) do
@@ -575,15 +575,50 @@ defmodule Construct.Type do
   defp of_base_type?(:decimal, value),   do: match?(%{__struct__: Decimal}, value)
   defp of_base_type?(_, _),              do: false
 
-  defp array([h|t], type, fun, acc, opts) do
+  defp array(term, type, fun, opts) do
+    if Keyword.get(opts, :error_values) do
+      array_acc_err(term, type, fun, {false, []}, opts)
+    else
+      array_acc(term, type, fun, [], opts)
+    end
+  end
+
+  defp array_acc_err([h|t], type, fun, {has_errors?, acc}, opts) do
     case fun.(type, h, opts) do
-      {:ok, h} -> array(t, type, fun, [h|acc], opts)
+      {:ok, h} -> array_acc_err(t, type, fun, {has_errors?, [h|acc]}, opts)
+      {:error, reason} -> array_acc_err(t, type, fun, {true, [{{:error, reason}, h}|acc]}, opts)
+      :error -> array_acc_err(t, type, fun, {true, [{{:error, :error}, h}|acc]}, opts)
+    end
+  end
+
+  defp array_acc_err([], _type, _fun, {false, acc}, _opts) do
+    {:ok, Enum.reverse(acc)}
+  end
+
+  defp array_acc_err([], _type, _fun, {true, acc}, _opts) do
+    errors =
+      acc
+      |> Enum.reverse()
+      |> Enum.with_index()
+      |> Enum.reduce([], fn
+           ({{{:error, reason}, _}, index}, acc) when is_map(reason) -> [%{index: index, error: reason} | acc]
+           ({{{:error, reason}, value}, index}, acc) -> [%{index: index, error: reason, value: value} | acc]
+           ({_value, _index}, acc) -> acc
+         end)
+      |> Enum.reverse()
+
+    {:error, errors}
+  end
+
+  defp array_acc([h|t], type, fun, acc, opts) do
+    case fun.(type, h, opts) do
+      {:ok, h} -> array_acc(t, type, fun, [h|acc], opts)
       {:error, reason} -> {:error, reason}
       :error -> :error
     end
   end
 
-  defp array([], _type, _fun, acc, _opts) do
+  defp array_acc([], _type, _fun, acc, _opts) do
     {:ok, Enum.reverse(acc)}
   end
 
