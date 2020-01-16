@@ -9,7 +9,7 @@ defmodule Construct.Cast do
 
   @type type :: {Construct.Type.t, Keyword.t}
   @type types :: %{required(atom) => type}
-  @type options :: [make_map: boolean, empty_values: list(term)]
+  @type options :: [error_values: boolean, make_map: boolean, empty_values: list(term)]
 
   @doc """
   Function to compose structure instance from params:
@@ -187,6 +187,7 @@ defmodule Construct.Cast do
 
   defp cast_field(param_key, type, type_opts, params, empty_values, opts) do
     default_value = Keyword.get(type_opts, :default, @default_value)
+    error_values = Keyword.get(opts, :error_values, false)
 
     case params do
       %{^param_key => value} when default_value != @default_value and value == default_value ->
@@ -194,25 +195,25 @@ defmodule Construct.Cast do
 
       %{^param_key => value} ->
         if value in empty_values do
-          {:error, :missing}
+          put_value(type, error_values, value, {:error, :missing})
         else
-          cast_field_value(type, value, empty_values, opts)
+          put_value(type, error_values, value, cast_field_value(type, value, empty_values, opts))
         end
 
       _ ->
         if default_value == @default_value do
-          {:error, :missing}
+          put_value(type, error_values, nil, {:error, :missing})
         else
-          {:ok, cast_default_value(default_value)}
+          {:ok, make_default_value(default_value)}
         end
 
     end
   end
 
-  defp cast_default_value(value) when is_function(value, 0) do
+  defp make_default_value(value) when is_function(value, 0) do
     value.()
   end
-  defp cast_default_value(value) do
+  defp make_default_value(value) do
     value
   end
 
@@ -232,5 +233,33 @@ defmodule Construct.Cast do
         raise Construct.MakeError, "expected #{inspect(type)} to return {:ok, term} | {:error, term} | :error, " <>
                                    "got an unexpected value: `#{inspect(any)}`"
     end
+  end
+
+  defp put_value(_, true, _value, {:error, reason}) when is_map(reason) do
+    {:error, reason}
+  end
+
+  defp put_value(_, true, _value, {:error, reason}) when is_list(reason) do
+    {:error, reason}
+  end
+
+  defp put_value(type, true, value, {:error, reason}) do
+    {:error, %{error: reason, value: value, expect: fetch_docs(type)}}
+  end
+
+  defp put_value(_, _, _, return) do
+    return
+  end
+
+  defp fetch_docs({box, arg} = type) do
+    if Construct.Type.primitive?(type) do
+      "#{box} of #{inspect(arg)} is expected"
+    else
+      fetch_docs(box)
+    end
+  end
+
+  defp fetch_docs(type) do
+    "#{inspect(type)} is expected"
   end
 end

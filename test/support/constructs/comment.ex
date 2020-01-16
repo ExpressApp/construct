@@ -1,5 +1,9 @@
 ### --- Cross-dependent modules --- ###
 defmodule Comment do
+  @moduledoc """
+  User's Comment
+  """
+
   use Construct
 
   structure do
