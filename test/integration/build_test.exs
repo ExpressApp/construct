@@ -138,9 +138,9 @@ defmodule Construct.Integration.BuildTest do
       end
     end)
 
-    assert_raise(Construct.DefinitionError, ~s(undefined complex type :any), fn ->
+    assert_raise(Construct.DefinitionError, ~s(undefined module UndefinedModule), fn ->
       create_construct do
-        field :key, {:any, UndefinedModule}
+        field :key, {UndefinedModule, []}
       end
     end)
 
@@ -176,9 +176,9 @@ defmodule Construct.Integration.BuildTest do
       end
     end)
 
-    assert_raise(Construct.DefinitionError, ~s(undefined complex type :any), fn ->
+    assert_raise(Construct.DefinitionError, ~s(undefined function castc/2 for CustomTypeEmpty), fn ->
       create_construct do
-        field :key, {:any, CustomTypeEmpty}
+        field :key, {CustomTypeEmpty, []}
       end
     end)
 
