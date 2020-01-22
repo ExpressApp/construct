@@ -9,7 +9,7 @@ defmodule Construct.Mixfile do
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env),
       dialyzer: [
-        plt_file: {:no_warn, "priv/dialyzer.plt"}
+        plt_file: {:no_warn, "_build/dialyzer.plt"}
       ],
 
       # Hex
