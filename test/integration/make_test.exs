@@ -434,6 +434,7 @@ defmodule Construct.Integration.MakeTest do
       include include1
 
       field :a, :integer, default: 0
+      field :b, :string
       field :c, :string, default: "from module"
     end
 

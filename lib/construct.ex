@@ -210,7 +210,7 @@ defmodule Construct do
   Checks if provided module is Construct definition
   """
   def construct_definition?(module) do
-    Code.ensure_compiled?(module) && function_exported?(module, :__construct__, 1)
+    ensure_compiled?(module) && function_exported?(module, :__construct__, 1)
   end
 
   @doc false
@@ -242,6 +242,12 @@ defmodule Construct do
           {[field | fields], enforce}
 
       end)
+
+    fields =
+      fields
+      |> Enum.reverse()
+      |> Enum.uniq_by(fn({k, _}) -> k end)
+      |> Enum.reverse()
 
     quote do
       @enforce_keys unquote(enforce_fields)
@@ -402,7 +408,7 @@ defmodule Construct do
 
   defp check_type_complex!(module, {f, a}) do
     unless construct_module?(module) do
-      unless Code.ensure_compiled?(module) do
+      unless ensure_compiled?(module) do
         raise Construct.DefinitionError, "undefined module #{inspect(module)}"
       end
 
@@ -457,6 +463,13 @@ defmodule Construct do
     if @no_raise_on_deadlocks, do: Code.ensure_compiled(module)
 
     Agent.get(@type_checker_name, &MapSet.member?(&1, module)) ||
-      Code.ensure_compiled?(module) && function_exported?(module, :__construct__, 1)
+      ensure_compiled?(module) && function_exported?(module, :__construct__, 1)
+  end
+
+  defp ensure_compiled?(module) do
+    case Code.ensure_compiled(module) do
+      {:module, _} -> true
+      {:error, _} -> false
+    end
   end
 end
