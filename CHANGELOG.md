@@ -1,5 +1,14 @@
 ## Changelog
 
+## v2.1.8
+
+* Enhancements
+  * Add experimental TypeC behaviour
+  * Add `error_values` option
+
+* Bug fixes
+  * Fix warnings for Elixir 1.10
+
 ## v2.1.7
 
 * Enhancements
