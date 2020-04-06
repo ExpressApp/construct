@@ -441,6 +441,44 @@ defmodule Construct.Integration.MakeTest do
     assert {:ok, %{a: 0, b: "b", c: "from module"}} = make(module, %{b: "b"})
   end
 
+  test "structure with `include` and only option" do
+    include1_module = create_construct do
+      field :a
+      field :b
+    end
+
+    include2_module = create_construct do
+      field :c
+      field :d
+    end
+
+    include1 = name(include1_module)
+    include2 = name(include2_module)
+
+    module = create_construct do
+      include include1, only: [:a]
+      include include2, only: []
+      include include2, only: [:d]
+    end
+
+    assert {:ok, %{a: "a", d: "d"}} = make(module, %{a: "a", b: "b", c: "c", d: "d"})
+  end
+
+  test "structure with `include` where field in only option doesn't exist" do
+    include_module = create_construct do
+      field :a
+      field :b
+    end
+
+    include = name(include_module)
+
+    assert_raise(Construct.DefinitionError, "field :c in :only option doesn't exist in Construct.Integration.MakeTest_468", fn ->
+      create_construct do
+        include include, only: [:c]
+      end
+    end)
+  end
+
   test "field with `[CommaList, {:array, :integer}]` type" do
     module = create_construct do
       field :key, [CommaList, {:array, :integer}]
