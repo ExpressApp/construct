@@ -113,16 +113,36 @@ defmodule Construct do
   If included structure is invalid for some reason — this macro throws an
   `Struct.DefinitionError` exception with detailed reason.
   """
-  @spec include(t) :: Macro.t()
-  defmacro include(struct) do
+  @spec include(t, keyword) :: Macro.t()
+  defmacro include(struct, opts \\ []) do
     quote do
       module = unquote(struct)
+
+      opts = unquote(opts)
+      only = Keyword.get(opts, :only)
 
       unless Construct.__is_construct_module__(module) do
         raise Construct.DefinitionError, "provided #{inspect(module)} is not Construct module"
       end
 
-      Enum.each(module.__construct__(:types), fn({name, {type, opts}}) ->
+      types = module.__construct__(:types)
+
+      types =
+        if is_list(only) do
+          Enum.each(only, fn(field) ->
+            unless Map.has_key?(types, field) do
+              raise Construct.DefinitionError,
+                "field #{inspect(field)} in :only option " <>
+                  "doesn't exist in #{inspect(module)}"
+            end
+          end)
+
+          Map.take(types, only)
+        else
+          types
+        end
+
+      Enum.each(types, fn({name, {type, opts}}) ->
         Construct.__field__(__MODULE__, name, type, opts)
       end)
     end
