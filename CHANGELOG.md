@@ -1,5 +1,10 @@
 ## Changelog
 
+## v2.1.9
+
+* Enhancements
+  * Add `only` option to `include`
+
 ## v2.1.8
 
 * Enhancements

@@ -110,8 +110,13 @@ defmodule Construct do
   @doc """
   Includes provided structure and checks definition for validity at compile-time.
 
+  ## Options
+
+    * `:only` - (integer) specify fields that should be taken from included module,
+      throws an error when field doesn't exist in provided module.
+
   If included structure is invalid for some reason — this macro throws an
-  `Struct.DefinitionError` exception with detailed reason.
+  `Construct.DefinitionError` exception with detailed reason.
   """
   @spec include(t, keyword) :: Macro.t()
   defmacro include(struct, opts \\ []) do
