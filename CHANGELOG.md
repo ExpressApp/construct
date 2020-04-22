@@ -1,5 +1,10 @@
 ## Changelog
 
+## v2.1.10
+
+* Enhancements
+  * Add `enforce_keys` option to not enforce keys when building struct
+
 ## v2.1.9
 
 * Enhancements

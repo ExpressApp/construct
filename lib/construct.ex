@@ -58,6 +58,7 @@ defmodule Construct do
 
     quote do
       @behaviour Construct
+      @construct_opts unquote(opts)
 
       unquote(pre_ast)
 
@@ -275,7 +276,12 @@ defmodule Construct do
       |> Enum.reverse()
 
     quote do
-      @enforce_keys unquote(enforce_fields)
+      enforce_keys = Keyword.get(@construct_opts, :enforce_keys, true)
+
+      if enforce_keys do
+        @enforce_keys unquote(enforce_fields)
+      end
+
       defstruct unquote(Macro.escape(fields))
     end
   end

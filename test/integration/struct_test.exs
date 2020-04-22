@@ -53,6 +53,14 @@ defmodule Construct.Integration.StructTest do
     end
   end
 
+  defmodule Test5 do
+    use Construct, enforce_keys: false
+
+    structure do
+      field :a, :string
+    end
+  end
+
   test "struct should be equal with make" do
     assert struct!(Test0) == Test0.make!()
   end
@@ -96,6 +104,8 @@ defmodule Construct.Integration.StructTest do
     end)
 
     assert {:ok, %Test4{a: %Time{}}} = Test4.make()
+
+    assert %Test5{a: nil} = struct!(Test5)
   end
 
   test "cycle deps" do
