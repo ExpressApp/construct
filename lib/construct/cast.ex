@@ -45,6 +45,12 @@ defmodule Construct.Cast do
       iex> make(%{age: {:integer, [default: 18]}}, %{})
       {:ok, %{age: 18}}
 
+      iex> make(%{age: {:integer, [optional: true]}}, %{})
+      {:ok, %{}}
+
+      iex> make(%{age: {:integer, [optional: true, default: 42]}, name: {:string, []}}, %{"name" => "john doe"})
+      {:ok, %{age: 42, name: "john doe"}}
+
       iex> types = %{title: {:string, []}, comments: {{:array, :string}, default: []}}
       iex> make(types, %{title: "article", comments: ["awesome", "great!", "whoa!"]})
       {:ok, %{title: "article", comments: ["awesome", "great!", "whoa!"]}}
@@ -169,6 +175,8 @@ defmodule Construct.Cast do
     {type, type_opts} = type!(key, types)
 
     case cast_field(param_key, type, type_opts, params, empty_values, opts) do
+      {:ok, :skip} ->
+        {changes, errors, valid?}
       {:ok, value} ->
         {Map.put(changes, key, value), errors, valid?}
       {:error, reason} ->
@@ -187,6 +195,7 @@ defmodule Construct.Cast do
 
   defp cast_field(param_key, type, type_opts, params, empty_values, opts) do
     default_value = Keyword.get(type_opts, :default, @default_value)
+    optional_parameter? = Keyword.get(type_opts, :optional, false)
     error_values = Keyword.get(opts, :error_values, false)
 
     case params do
@@ -201,10 +210,15 @@ defmodule Construct.Cast do
         end
 
       _ ->
-        if default_value == @default_value do
-          put_value(type, error_values, nil, {:error, :missing})
-        else
-          {:ok, make_default_value(default_value)}
+        cond do
+          optional_parameter? && default_value != @default_value ->
+            {:ok, make_default_value(default_value)}
+          optional_parameter? && default_value == @default_value ->
+            {:ok, :skip}
+          default_value == @default_value ->
+            put_value(type, error_values, nil, {:error, :missing})
+          true ->
+            {:ok, make_default_value(default_value)}
         end
 
     end

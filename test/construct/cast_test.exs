@@ -87,6 +87,23 @@ defmodule Construct.CastTest do
       assert {:ok, %{foo: nil}} == Cast.make(types, %{"foo" => nil})
     end
 
+    test "with `optional: true`" do
+      types = %{foo: {:integer, [optional: true]}, bar: {:integer, []}}
+
+      assert {:ok, %{bar: 1}} == Cast.make(types, %{bar: 1})
+      assert {:ok, %{bar: 1, foo: 2}} == Cast.make(types, %{bar: 1, foo: 2})
+      assert {:error, %{bar: :missing}} == Cast.make(types, %{})
+      assert {:ok, %{bar: 1, foo: 2}} == Cast.make(types, %{bar: 1, foo: 2})
+    end
+
+    test "with `optional: true` and `default`" do
+      types = %{foo: {:integer, [optional: true, default: 42]}, bar: {:integer, []}}
+
+      assert {:ok, %{bar: 1, foo: 42}} == Cast.make(types, %{bar: 1})
+      assert {:ok, %{bar: 1, foo: 2}} == Cast.make(types, %{bar: 1, foo: 2})
+      assert {:error, %{bar: :missing}} == Cast.make(types, %{})
+    end
+
     test "with nested types" do
       assert {:ok, %{foo: %{bar: %{baz: "test"}}}}
           == Cast.make(%{foo: %{bar: %{baz: :string}}}, %{"foo" => %{"bar" => %{"baz" => "test"}}})
