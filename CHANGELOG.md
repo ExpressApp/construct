@@ -1,5 +1,9 @@
 ## Changelog
 
+## v3.0.0
+
+<!-- TODO fill the changelog -->
+
 ## v2.1.10
 
 * Enhancements

@@ -1,27 +1,26 @@
-defmodule StructBench do
-  use Benchfella
+defmodule Embedded do
+  use Construct
 
-  defmodule Embedded do
-    use Construct
-
-    structure do
-      field :e
-    end
-  end
-
-  defmodule Example do
-    use Construct
-
-    structure do
-      field :a
-      field :b, :float
-      field :c, {:map, :integer}
-      field :d, Embedded
-    end
-  end
-
-  bench "complex" do
-    {:ok, %Example{}} =
-      Example.make(%{a: "test", b: 1.42, c: %{a: 0, b: 42}, d: %{e: "embeds"}})
+  structure do
+    field :e
   end
 end
+
+defmodule Example do
+  use Construct
+
+  structure do
+    field :a
+    field :b, :float
+    field :c, {:map, :integer}
+    field :d, Embedded
+  end
+end
+
+Benchee.run(
+  %{
+    "make" => fn -> {:ok, _} = Example.make(%{a: "test", b: 1.42, c: %{a: 0, b: 42}, d: %{e: "embeds"}}) end,
+  },
+  time: 10,
+  memory_time: 2
+)
