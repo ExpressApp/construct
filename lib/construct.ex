@@ -149,6 +149,9 @@ defmodule Construct do
     end
   end
 
+  @doc """
+  No doc at this time, should be written for 3.0.0 release
+  """
   defmacro structure_compile_hook(type, [do: ast]) do
     Construct.Compiler.define_structure_compile_hook(type, ast)
   end
