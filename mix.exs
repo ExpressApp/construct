@@ -4,10 +4,11 @@ defmodule Construct.Mixfile do
   def project do
     [
       app: :construct,
-      version: "2.1.10",
-      elixir: "~> 1.5",
+      version: "3.0.0-rc.0",
+      elixir: "~> 1.9",
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env),
+      consolidate_protocols: Mix.env() != :test,
       dialyzer: [
         plt_file: {:no_warn, "_build/dialyzer.plt"}
       ],
@@ -33,12 +34,12 @@ defmodule Construct.Mixfile do
 
   defp deps do
     [
-      {:decimal, "~> 1.5", only: [:dev, :test]},
-      {:benchfella, "~> 0.3", only: [:dev, :test]},
-      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev, :test], runtime: false},
-      {:earmark, "~> 1.2", only: :dev},
-      {:ex_doc, "~> 0.19", only: :dev},
-      {:jason, "~> 1.1", only: :test}
+      {:decimal, "~> 1.6 or ~> 2.0", only: [:dev, :test]},
+      {:benchee, "~> 1.0", only: [:dev, :test]},
+      {:dialyxir, "~> 1.1.0", only: [:dev, :test], runtime: false},
+      {:earmark, "~> 1.4", only: :dev},
+      {:ex_doc, "~> 0.28", only: :dev},
+      {:jason, "~> 1.3", only: :test}
     ]
   end
 

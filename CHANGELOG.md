@@ -1,5 +1,16 @@
 ## Changelog
 
+## v3.0.0
+
+* Enhancements
+  * Add `structure_compile_hook/2` macro to inject code into structures
+    See `Construct.Hooks.Map` and `Construct.Hooks.OmitDefault` for examples
+  * Compiler optimization and refactor
+
+* Hard-deprecations
+  * Remove `make_map` option
+  * Remove `empty_values` option
+
 ## v2.1.10
 
 * Enhancements
