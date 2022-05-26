@@ -23,10 +23,6 @@ defmodule Construct.CastTest do
       assert {:ok, %Construct.CastTest.Valid{a: "test"}} == Cast.make(Valid, %{a: "test"})
     end
 
-    test "returns map with `make_map: true`" do
-      assert {:ok, %{a: "test"}} == Cast.make(Valid, %{a: "test"}, make_map: true)
-    end
-
     test "accepts params as keyword list" do
       assert {:ok, %Valid{a: "test"}} == Cast.make(Valid, [a: "test"])
     end

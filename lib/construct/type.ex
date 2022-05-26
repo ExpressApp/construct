@@ -132,7 +132,7 @@ defmodule Construct.Type do
 
   """
   @spec cast(t, term, options) :: cast_ret | any
-    when options: [make_map: boolean]
+    when options: Keyword.t()
 
   def cast({:array, type}, term, opts) when is_list(term) do
     array(term, type, &cast/3, opts)

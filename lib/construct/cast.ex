@@ -9,7 +9,7 @@ defmodule Construct.Cast do
 
   @type type :: {Construct.Type.t, Keyword.t}
   @type types :: %{required(atom) => type}
-  @type options :: [error_values: boolean, make_map: boolean, empty_values: list(term)]
+  @type options :: [error_values: boolean]
 
   @doc """
   Function to compose structure instance from params:
@@ -52,18 +52,6 @@ defmodule Construct.Cast do
       iex> make(%{user: %{name: :string, age: {:integer, default: 21}}}, %{"user" => %{"name" => "john"}})
       {:ok, %{user: %{name: "john", age: 21}}}
 
-  Options:
-
-    * `make_map` — return result as map instead of structure, defaults to false;
-    * `empty_values` — list of terms indicates empty values, defaults to [].
-
-  Example of `empty_values`:
-
-      iex> make(%{name: {:string, []}}, %{name: ""}, empty_values: [""])
-      {:error, %{name: :missing}}
-
-      iex> make(%{name: {:string, []}}, %{name: "john"}, empty_values: ["john"])
-      {:error, %{name: :missing}}
   """
   @spec make(atom | types, map, options) :: {:ok, Construct.t | map} | {:error, term}
   def make(struct_or_types, params, opts \\ [])

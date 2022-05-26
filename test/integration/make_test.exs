@@ -367,38 +367,6 @@ defmodule Construct.Integration.MakeTest do
         == make(module2, %{nested: [1]}, opts)
   end
 
-  test "make with `empty_values` option" do
-    opts = [empty_values: [nil, "", "test", 1.42]]
-
-    module = create_construct do
-      field :key, :string
-    end
-
-    assert {:error, %{key: :missing}} = make(module, %{key: nil}, opts)
-    assert {:error, %{key: :missing}} = make(module, %{key: ""}, opts)
-    assert {:error, %{key: :missing}} = make(module, %{key: "test"}, opts)
-    assert {:error, %{key: :missing}} = make(module, %{key: 1.42}, opts)
-    assert {:ok, %{key: "qwe"}} = make(module, %{key: "qwe"}, opts)
-  end
-
-  test "make with `make_map: false` option" do
-    module = create_construct do
-      field :key
-    end
-
-    assert {:ok, structure} = make(module, %{key: "test"}, make_map: false)
-    assert Map.has_key?(structure, :__struct__)
-  end
-
-  test "make with `make_map: true` option" do
-    module = create_construct do
-      field :key
-    end
-
-    assert {:ok, structure} = make(module, %{key: "test"}, make_map: true)
-    refute Map.has_key?(structure, :__struct__)
-  end
-
   test "structure with `include`" do
     include1_module = create_construct do
       field :a
@@ -472,7 +440,7 @@ defmodule Construct.Integration.MakeTest do
 
     include = name(include_module)
 
-    assert_raise(Construct.DefinitionError, "field :c in :only option doesn't exist in Construct.Integration.MakeTest_468", fn ->
+    assert_raise(Construct.DefinitionError, "field :c in :only option doesn't exist in #{inspect(include)}", fn ->
       create_construct do
         include include, only: [:c]
       end
