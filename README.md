@@ -1,4 +1,4 @@
-# Construct [![Build Status](https://img.shields.io/travis/ExpressApp/construct.svg)](https://travis-ci.org/ExpressApp/construct) [![Hex.pm](https://img.shields.io/hexpm/v/construct.svg)](https://hex.pm/packages/construct)
+# Construct [![Hex.pm](https://img.shields.io/hexpm/v/construct.svg)](https://hex.pm/packages/construct)
 
 ---
 
