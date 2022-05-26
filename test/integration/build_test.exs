@@ -68,6 +68,23 @@ defmodule Construct.Integration.BuildTest do
     assert Module.concat([module_name, Parent, NestedStruct, SOME_OF1]) == some.__struct__
   end
 
+  test "use construct as type with error in make/2" do
+    type_module1 = create_construct do
+      field :key
+
+      def make(params, opts) do
+        exit(:whoops)
+        super(params, opts)
+      end
+    end
+
+    type1 = name(type_module1)
+
+    create_construct do
+      field :key, type1
+    end
+  end
+
   test "raise when try to use non-atom field name" do
     assert_raise(Construct.DefinitionError, ~s(expected atom for field name, got `"key"`), fn ->
       create_construct do

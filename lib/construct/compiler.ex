@@ -380,7 +380,7 @@ defmodule Construct.Compiler do
         if function_exported?(type, :default, 0) do
           &type.default/0
         else
-          make_struct(type)
+          make_construct_structure(type)
         end
 
       term ->
@@ -416,10 +416,12 @@ defmodule Construct.Compiler do
     default
   end
 
-  defp make_struct(module) do
+  # using `make!/0` here let us to traverse default value
+  # through entire hooks (when `make/2` overriden) pipeline
+  defp make_construct_structure(module) do
     module.make!()
-  rescue
-    [Construct.MakeError, UndefinedFunctionError] -> @no_default
+  catch
+    _, _ -> @no_default
   end
 
   defp ensure_compiled?(module) do
