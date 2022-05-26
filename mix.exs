@@ -13,6 +13,9 @@ defmodule Construct.Mixfile do
         plt_file: {:no_warn, "_build/dialyzer.plt"}
       ],
 
+      # Tests
+      test_coverage: [tool: ExCoveralls],
+
       # Hex
       description: description(),
       package: package(),
@@ -39,7 +42,8 @@ defmodule Construct.Mixfile do
       {:dialyxir, "~> 1.1.0", only: [:dev, :test], runtime: false},
       {:earmark, "~> 1.4", only: :dev},
       {:ex_doc, "~> 0.28", only: :dev},
-      {:jason, "~> 1.3", only: :test}
+      {:jason, "~> 1.3", only: :test},
+      {:excoveralls, "~> 0.14", only: :test}
     ]
   end
 
