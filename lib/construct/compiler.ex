@@ -116,7 +116,7 @@ defmodule Construct.Compiler do
       enforce_keys = Keyword.get(@construct_opts, :enforce_keys, true)
 
       if enforce_keys do
-        @enforce_keys unquote(enforce_fields)
+        @enforce_keys Enum.uniq(unquote(enforce_fields))
       end
 
       defstruct unquote(Macro.escape(fields))

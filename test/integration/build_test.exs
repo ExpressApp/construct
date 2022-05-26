@@ -21,23 +21,6 @@ defmodule Construct.Integration.BuildTest do
     end)
   end
 
-  test "pass `empty_values` to use/2" do
-    module = create_construct [empty_values: ["empty_val"]] do
-      field :a
-    end
-
-    assert {:ok, %{a: ""}} = make(module, %{a: ""})
-    assert {:error, %{a: :missing}} == make(module, %{a: "empty_val"})
-  end
-
-  test "pass `make_map` to use/2" do
-    module = create_construct [make_map: true] do
-      field :a
-    end
-
-    assert {:ok, %{a: ""}} == make(module, %{a: ""})
-  end
-
   test "include other structure" do
     include1_module = create_construct do
       field :a, :string, default: nil
@@ -74,13 +57,15 @@ defmodule Construct.Integration.BuildTest do
       end
     end
 
+    module_name = name(module)
+
     assert {:ok, root = %{parent: parent = %{nested_struct: nested = %{SOME_OF_1: some = %{c: "test"}}}}}
          = make(module, %{parent: %{nested_struct: %{SOME_OF_1: %{c: "test"}}}})
 
-    assert Construct.Integration.BuildTest_67 == root.__struct__
-    assert Construct.Integration.BuildTest_67.Parent == parent.__struct__
-    assert Construct.Integration.BuildTest_67.Parent.NestedStruct == nested.__struct__
-    assert Construct.Integration.BuildTest_67.Parent.NestedStruct.SOME_OF1 == some.__struct__
+    assert Module.concat([module_name]) == root.__struct__
+    assert Module.concat([module_name, Parent]) == parent.__struct__
+    assert Module.concat([module_name, Parent, NestedStruct]) == nested.__struct__
+    assert Module.concat([module_name, Parent, NestedStruct, SOME_OF1]) == some.__struct__
   end
 
   test "raise when try to use non-atom field name" do

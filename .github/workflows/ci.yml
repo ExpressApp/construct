@@ -23,7 +23,7 @@ jobs:
           - otp: 22.3
             elixir: 1.11
           - otp: 21.3
-            elixir: 1.10
+            elixir: 1.10.4
     env:
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       MIX_ENV: test
