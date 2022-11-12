@@ -4,6 +4,6 @@ defmodule Post do
 
   structure do
     field :id, :integer
-    field :comments, {:array, Comment}, default: nil
+    field :comments, {:array, Comment}, default: []
   end
 end

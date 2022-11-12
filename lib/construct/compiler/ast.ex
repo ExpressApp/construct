@@ -22,16 +22,25 @@ defmodule Construct.Compiler.AST do
 
     case Keyword.fetch(opts, :default) do
       {:ok, default} ->
-        typeof_default = Construct.Compiler.AST.Types.typeof(default)
-
-        if type == typeof_default do
-          type
-        else
-          quote do: unquote(type) | unquote(typeof_default)
-        end
+        spec_type_default(type, default)
 
       :error ->
         type
+    end
+  end
+
+  defp spec_type_default(type, default) do
+    case {type, Construct.Compiler.AST.Types.typeof(default)} do
+      {term, term} ->
+        type
+
+      {{:list, _, _} = type, {:list, [], []}} ->
+        type
+
+      {type, typeof_default} ->
+        quote do
+          unquote(type) | unquote(typeof_default)
+        end
     end
   end
 end

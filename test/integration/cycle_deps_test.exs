@@ -12,7 +12,7 @@ defmodule Construct.Integration.CycleDepsTest do
 
   test "makes cross-dependent constructs properly" do
     assert {:ok, %Post{id: 1, comments: [%Comment{id: 2, post: nil},
-                                         %Comment{id: 3, post: %Post{comments: nil, id: 1}}]}}
+                                         %Comment{id: 3, post: %Post{comments: [], id: 1}}]}}
         == Post.make(%{id: 1, comments: [%{id: 2}, %{id: 3, post: %{id: 1}}]})
   end
 end
