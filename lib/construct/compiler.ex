@@ -69,7 +69,7 @@ defmodule Construct.Compiler do
       Module.eval_quoted(__ENV__, AST.block([
         Compiler.define_struct(@construct_fields, @construct_fields_enforce),
         Compiler.define_construct_functions(__ENV__, @fields),
-        Compiler.define_typespec(@fields),
+        Compiler.define_typespec(__ENV__, @fields),
       ]))
 
       Module.eval_quoted(__ENV__, AST.block(
@@ -134,16 +134,20 @@ defmodule Construct.Compiler do
     end
   end
 
-  def define_typespec(fields) do
-    typespecs =
-      Enum.map(fields, fn({name, type, opts}) ->
-        {name, AST.spec_type(type, opts)}
-      end)
+  def define_typespec(env, fields) do
+    if Module.defines_type?(env.module, {:t, 0}) do
+      :ok
+    else
+      typespecs =
+        Enum.map(fields, fn({name, type, opts}) ->
+          {name, AST.spec_type(type, opts)}
+        end)
 
-    modulespec = AST.spec_struct(typespecs)
+      modulespec = AST.spec_struct(typespecs)
 
-    quote do
-      @type t :: unquote(modulespec)
+      quote do
+        @type t :: unquote(modulespec)
+      end
     end
   end
 

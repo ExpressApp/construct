@@ -68,6 +68,18 @@ defmodule Construct.Integration.BuildTest do
     assert Module.concat([module_name, Parent, NestedStruct, SOME_OF1]) == some.__struct__
   end
 
+  test "able to define our own typespec" do
+    create_module do
+      @type t :: %__MODULE__{
+        module: module() | term()
+      }
+
+      use Construct do
+        field :module, :any, default: String
+      end
+    end
+  end
+
   test "raise when try to use non-atom field name" do
     assert_raise(Construct.DefinitionError, ~s(expected atom for field name, got `"key"`), fn ->
       create_construct do

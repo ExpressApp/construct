@@ -156,8 +156,12 @@ defmodule Construct.Compiler.AST.Types do
   end
 
   def typeof(term) when is_atom(term) do
-    quote do
-      unquote(term).t()
+    if Construct.Compiler.construct_module?(term) do
+      quote do
+        unquote(term).t()
+      end
+    else
+      {:atom, [], []}
     end
   end
 
