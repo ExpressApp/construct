@@ -82,7 +82,7 @@ defmodule Construct.Compiler.AST.Types do
   end
 
   def spec(type) when type in @builtin do
-    type
+    {type, [], []}
   end
 
   def spec(type) when is_atom(type) do
@@ -156,8 +156,12 @@ defmodule Construct.Compiler.AST.Types do
   end
 
   def typeof(term) when is_atom(term) do
-    quote do
-      unquote(term).t()
+    if Construct.Compiler.construct_module?(term) do
+      quote do
+        unquote(term).t()
+      end
+    else
+      {:atom, [], []}
     end
   end
 
