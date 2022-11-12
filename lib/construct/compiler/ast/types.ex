@@ -82,7 +82,7 @@ defmodule Construct.Compiler.AST.Types do
   end
 
   def spec(type) when type in @builtin do
-    type
+    {type, [], []}
   end
 
   def spec(type) when is_atom(type) do
