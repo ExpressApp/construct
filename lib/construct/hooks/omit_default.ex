@@ -3,7 +3,7 @@ defmodule Construct.Hooks.OmitDefault do
     quote do
       structure_compile_hook :post do
         @omits Enum.reduce(@fields, [], fn({name, _type, opts}, acc) ->
-          if Keyword.get(opts, :omit_default) == true do
+          if Keyword.get(opts, :omit_default, true) do
             [{name, Keyword.get(opts, :default)} | acc]
           else
             acc
@@ -22,6 +22,10 @@ defmodule Construct.Hooks.OmitDefault do
 
             {:ok, term}
           end
+        end
+
+        def __omits__ do
+          @omits
         end
 
         defoverridable make: 2

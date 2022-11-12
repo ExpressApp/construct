@@ -9,17 +9,17 @@ defmodule Construct.Integration.Hooks.OmitDefaultTest do
       structure do
         field :a
 
-        field :b, [omit_default: true] do
+        field :b do
           field :ba, :string, default: "!"
         end
 
-        field :d do
-          field :da, :string, default: nil, omit_default: true
+        field :d, [omit_default: false] do
+          field :da, :string, default: nil
         end
 
-        field :c, [omit_default: true] do
-          field :ca, :string, default: nil
-          field :cb, :string, default: nil, omit_default: true
+        field :c do
+          field :ca, :string, default: nil, omit_default: false
+          field :cb, :string, default: nil
         end
       end
     end
