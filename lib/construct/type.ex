@@ -149,7 +149,7 @@ defmodule Construct.Type do
   def cast(type, term, opts) when is_atom(type) do
     cond do
       not primitive?(type) ->
-        if Code.ensure_loaded?(type) && function_exported?(type, :cast, 2) do
+        if function_exported?(type, :cast, 2) do
           type.cast(term, opts)
         else
           type.cast(term)
