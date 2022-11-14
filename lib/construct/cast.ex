@@ -131,7 +131,7 @@ defmodule Construct.Cast do
     end)
     |> case do
          nil -> params
-         list -> Enum.into(list, %{})
+         list -> Map.new(list)
        end
   end
 
@@ -144,11 +144,11 @@ defmodule Construct.Cast do
   end
 
   defp convert_types(types) when is_list(types) do
-    Enum.into(types, %{})
+    Map.new(types)
   end
 
-  defp convert_types(invalid_types) do
-    raise Construct.Error, "expected types to be a {key, value} structure, got: #{inspect(invalid_types)}"
+  defp convert_types(types) do
+    raise Construct.Error, "expected types to be a {key, value} structure, got: #{inspect(types)}"
   end
 
   defp process_param(key, params, types, opts, {changes, errors, valid?}) do
@@ -158,6 +158,7 @@ defmodule Construct.Cast do
     case cast_field(param_key, type, type_opts, params, opts) do
       {:ok, value} ->
         {Map.put(changes, key, value), errors, valid?}
+
       {:error, reason} ->
         {changes, Map.put(errors, key, reason), false}
     end
@@ -189,7 +190,6 @@ defmodule Construct.Cast do
         else
           {:ok, make_default_value(default_value)}
         end
-
     end
   end
 
