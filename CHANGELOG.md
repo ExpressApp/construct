@@ -11,6 +11,9 @@
   * Remove `make_map` option
   * Remove `empty_values` option
 
+* Bug fixes
+  * Fix typespecs generation
+
 ## v2.1.10
 
 * Enhancements
