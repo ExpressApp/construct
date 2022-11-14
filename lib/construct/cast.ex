@@ -99,8 +99,9 @@ defmodule Construct.Cast do
     params = convert_params(params)
     types = convert_types(types)
     permitted = Map.keys(types)
+    error_values = Keyword.get(opts, :error_values, false)
 
-    case Enum.reduce(permitted, {%{}, %{}, true}, &process_param(&1, params, types, opts, &2)) do
+    case Enum.reduce(permitted, {%{}, %{}, true}, &process_param(&1, params, types, error_values, opts, &2)) do
       {changes, _errors, true} -> {:ok, changes}
       {_changes, errors, false} -> {:error, errors}
     end
@@ -151,11 +152,11 @@ defmodule Construct.Cast do
     raise Construct.Error, "expected types to be a {key, value} structure, got: #{inspect(types)}"
   end
 
-  defp process_param(key, params, types, opts, {changes, errors, valid?}) do
+  defp process_param(key, params, types, error_values, opts, {changes, errors, valid?}) do
     param_key = Atom.to_string(key)
     {type, type_opts} = type!(key, types)
 
-    case cast_field(param_key, type, type_opts, params, opts) do
+    case cast_field(param_key, type, type_opts, params, error_values, opts) do
       {:ok, value} ->
         {Map.put(changes, key, value), errors, valid?}
 
@@ -173,9 +174,8 @@ defmodule Construct.Cast do
     end
   end
 
-  defp cast_field(param_key, type, type_opts, params, opts) do
+  defp cast_field(param_key, type, type_opts, params, error_values, opts) do
     default_value = Keyword.get(type_opts, :default, @default_value)
-    error_values = Keyword.get(opts, :error_values, false)
 
     case params do
       %{^param_key => value} when default_value != @default_value and value == default_value ->

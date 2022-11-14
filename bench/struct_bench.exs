@@ -19,8 +19,11 @@ end
 
 Benchee.run(
   %{
-    "make" => fn -> {:ok, _} = Example.make(%{a: "test", b: 1.42, c: %{a: 0, b: 42}, d: %{e: "embeds"}}) end,
+    "make" => fn ->
+      {:ok, _} = Example.make(%{a: "test", b: 1.42, c: %{a: 0, b: 42}, d: %{e: "embeds"}})
+    end,
   },
-  time: 10,
-  memory_time: 2
+  time: 3,
+  memory_time: 3,
+  reduction_time: 3
 )
