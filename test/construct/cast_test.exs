@@ -2,6 +2,7 @@ defmodule Construct.CastTest do
   use ExUnit.Case
 
   alias Construct.Cast
+  alias Construct.Types.CommaList
 
   doctest Construct.Cast, import: true
 

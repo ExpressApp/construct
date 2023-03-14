@@ -2,6 +2,7 @@ defmodule Construct.TypeTest do
   use Construct.TestCase
 
   alias Construct.Type
+  alias Construct.Types.CommaList
 
   doctest Construct.Type, import: true
 

@@ -130,6 +130,10 @@ defmodule Construct.Type do
       iex> cast(:string, [1, 2, 3])
       :error
 
+      iex> cast({Construct.Types.Enum, [:a, :b, :c]}, :a)
+      {:ok, :a}
+      iex> cast({Construct.Types.Enum, [:a, :b, :c]}, :d)
+      {:error, passed_value: :d, valid_values: [:a, :b, :c]}
   """
   @spec cast(t, term, options) :: cast_ret | any
     when options: Keyword.t()
