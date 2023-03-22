@@ -1,4 +1,6 @@
 defmodule Construct.Hooks.Map do
+  @moduledoc false
+
   defmacro __using__(_opts \\ []) do
     quote do
       structure_compile_hook :post do

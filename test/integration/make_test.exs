@@ -1,6 +1,10 @@
 defmodule Construct.Integration.MakeTest do
   use Construct.TestCase
 
+  # For some reason it keeps emitting a warning about an unused alias
+  # while it's actually used.
+  alias Construct.Types.CommaList, warn: false
+
   test "with simple stupid params" do
     module = create_construct do
       field :key
@@ -84,23 +88,23 @@ defmodule Construct.Integration.MakeTest do
 
   test "field with type `[t, {t, ...}]`" do
     module = create_construct do
-      field :key, [:string, {EnumT, ~w(A B C)}]
+      field :key, [:string, {Construct.Types.Enum, ~w(A B C)}]
     end
 
-    assert {:ok, %{key: "A"}} = make(module, %{key: "a"})
-    assert {:error, %{key: :invalid}} = make(module, %{key: "d"})
+    assert {:ok, %{key: "A"}} = make(module, %{key: "A"})
+    assert {:error, %{key: [passed_value: "D", valid_values: ["A", "B", "C"]]}} = make(module, %{key: "D"})
     assert {:error, %{key: :invalid}} = make(module, %{key: 123})
     assert {:error, %{key: :missing}} = make(module, %{})
   end
 
   test "field with type `[t, {:array, {t, ...}}]`" do
     module = create_construct do
-      field :key, [CommaList, {:array, {EnumT, ~w(A B C)}}]
+      field :key, [CommaList, {:array, {Construct.Types.Enum, ~w(A B C)}}]
     end
 
-    assert {:ok, %{key: ["A"]}} = make(module, %{key: "a"})
-    assert {:ok, %{key: ["A", "C", "B"]}} = make(module, %{key: "a,c,b"})
-    assert {:error, %{key: :invalid}} = make(module, %{key: "a,d"})
+    assert {:ok, %{key: ["A"]}} = make(module, %{key: "A"})
+    assert {:ok, %{key: ["A", "C", "B"]}} = make(module, %{key: "A,C,B"})
+    assert {:error, %{key: [passed_value: "D", valid_values: ["A", "B", "C"]]}} = make(module, %{key: "A,D"})
     assert {:error, %{key: :invalid}} = make(module, %{key: 123})
     assert {:error, %{key: :missing}} = make(module, %{})
   end
@@ -295,7 +299,7 @@ defmodule Construct.Integration.MakeTest do
     end
 
     assert {:error,
-             %{nested: %{error: :missing, value: nil, expect: "array of Construct.Integration.MakeTest_287 is expected"}}}
+             %{nested: %{error: :missing, value: nil, expect: "array of Construct.Integration.MakeTest_291 is expected"}}}
         == make(module2, %{}, opts)
 
     assert {:error,
@@ -360,7 +364,7 @@ defmodule Construct.Integration.MakeTest do
       field :nested, {:array, module1_type}
     end
 
-    assert {:error, %{nested: %{error: :missing, value: nil, expect: "array of Construct.Integration.MakeTest_352 is expected"}}}
+    assert {:error, %{nested: %{error: :missing, value: nil, expect: "array of Construct.Integration.MakeTest_356 is expected"}}}
         == make(module2, %{}, opts)
 
     assert {:error, %{nested: [%{error: %{key: %{error: :missing, expect: "Comment is expected", value: nil}}, index: 0}]}}

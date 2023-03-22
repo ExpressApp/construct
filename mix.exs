@@ -63,7 +63,14 @@ defmodule Construct.Mixfile do
     [
       main: "readme",
       source_url: "https://github.com/ExpressApp/construct",
-      extras: ["README.md"]
+      extras: ["README.md"],
+      groups_for_modules: [
+        "Provided types": [
+          Construct.Types.CommaList,
+          Construct.Types.Enum,
+          Construct.Types.UUID
+        ]
+      ]
     ]
   end
 end
