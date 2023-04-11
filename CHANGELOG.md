@@ -1,5 +1,10 @@
 ## Changelog
 
+## v3.0.1
+
+* Enhancements
+  * Add `Construct.Types` with `CommaList`, `Enum` and `UUID`
+
 ## v3.0.0
 
 * Enhancements
