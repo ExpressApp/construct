@@ -19,7 +19,6 @@ jobs:
         include:
           - elixir: "1.17.3"
             otp: "27.1"
-            coverage: true
             lint: lint
           - elixir: "1.17.3"
             otp: "25.0.4"
