@@ -4,17 +4,14 @@ defmodule Construct.Mixfile do
   def project do
     [
       app: :construct,
-      version: "3.0.1",
-      elixir: "~> 1.9",
+      version: "3.1.0",
+      elixir: "~> 1.14",
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env),
       consolidate_protocols: Mix.env() != :test,
       dialyzer: [
         plt_file: {:no_warn, "_build/dialyzer.plt"}
       ],
-
-      # Tests
-      test_coverage: [tool: ExCoveralls],
 
       # Hex
       description: description(),
@@ -39,10 +36,9 @@ defmodule Construct.Mixfile do
     [
       {:decimal, "~> 1.6 or ~> 2.0", only: [:dev, :test]},
       {:benchee, "~> 1.0", only: [:dev, :test]},
-      {:dialyxir, "~> 1.1.0", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.28", only: :dev},
-      {:jason, "~> 1.3", only: :test},
-      {:excoveralls, "~> 0.14", only: :test}
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.35", only: :dev},
+      {:jason, "~> 1.4", only: :test}
     ]
   end
 
