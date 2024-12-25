@@ -218,7 +218,11 @@ defmodule Construct.Type do
   def cast(:reference, term) when is_reference(term), do: {:ok, term}
 
   def cast(:decimal, term) when is_binary(term) do
-    validate_decimal(apply(Decimal, :parse, [term]))
+    case apply(Decimal, :parse, [term]) do
+      {:ok, term} -> validate_decimal({:ok, term})
+      {%{__struct__: Decimal} = term, _} -> validate_decimal({:ok, term})
+      :error -> :error
+    end
   end
   def cast(:decimal, term) when is_integer(term) do
     {:ok, apply(Decimal, :new, [term])}
