@@ -9,26 +9,22 @@ on:
 jobs:
   test:
     name: Test (Elixir ${{matrix.elixir}} | Erlang/OTP ${{matrix.otp}})
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
+    env:
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      MIX_ENV: test
     strategy:
       fail-fast: false
       matrix:
         include:
-          - otp: 25
-            elixir: 1.14
+          - elixir: "1.17.3"
+            otp: "27.1"
             coverage: true
-            lint: true
-          - otp: 24.3
-            elixir: 1.13
-          - otp: 23.3
-            elixir: 1.12
-          - otp: 22.3
-            elixir: 1.11
-          - otp: 21.3
-            elixir: 1.10.4
-    env:
-      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      MIX_ENV: test
+            lint: lint
+          - elixir: "1.17.3"
+            otp: "25.0.4"
+          - elixir: "1.14.5"
+            otp: "23.3.4.20"
 
     steps:
       - name: Clone the repository
