@@ -1,5 +1,11 @@
 ## Changelog
 
+## v3.0.2
+
+* Enhancements
+  * Fix warnings for Elixir 1.8.x
+  * Add experimental hook `Construct.Hooks.Fasten` that works faster that standart make
+
 ## v3.0.1
 
 * Enhancements
