@@ -30,8 +30,12 @@ defmodule Construct.Integration.CompileHookTest do
 
     assert {:ok, structure} = make(module, a: "string")
 
-    assert ~s({"a":"string","b":{"ba":{"baa":"test"},"bb":42},"d":{"da":{"daa":0}}})
-        == Jason.encode!(structure)
+    assert json = Jason.encode!(structure)
+    assert %{
+      "a" => "string",
+      "b" => %{"ba" => %{"baa" => "test"}, "bb" => 42},
+      "d" => %{"da" => %{"daa" => 0}}
+    } == Jason.decode!(json)
   end
 
   test "compile hook pass its ast down to nested structs" do

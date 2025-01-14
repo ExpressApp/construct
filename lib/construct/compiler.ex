@@ -51,9 +51,9 @@ defmodule Construct.Compiler do
 
       Module.put_attribute(__MODULE__, :construct_defined, true)
 
-      Module.eval_quoted(__ENV__, AST.block(
+      Code.eval_quoted_with_env(AST.block(
         Enum.reverse(Module.get_attribute(__MODULE__, :construct_compile_hook_pre))
-      ))
+      ), [], __ENV__)
 
       try do
         import Construct, only: [
@@ -66,15 +66,15 @@ defmodule Construct.Compiler do
         :ok
       end
 
-      Module.eval_quoted(__ENV__, AST.block([
+      Code.eval_quoted_with_env(AST.block([
         Compiler.define_struct(@construct_fields, @construct_fields_enforce),
         Compiler.define_construct_functions(__ENV__, @fields),
         Compiler.define_typespec(__ENV__, @fields),
-      ]))
+      ]), [], __ENV__)
 
-      Module.eval_quoted(__ENV__, AST.block(
+      Code.eval_quoted_with_env(AST.block(
         Enum.reverse(Module.get_attribute(__MODULE__, :construct_compile_hook_post))
-      ))
+      ), [], __ENV__)
     end
   end
 
@@ -183,9 +183,9 @@ defmodule Construct.Compiler do
       defmodule module_name do
         use Construct
 
-        Module.eval_quoted(__ENV__, derives_ast)
-        Module.eval_quoted(__ENV__, definition_pre_ast)
-        Module.eval_quoted(__ENV__, definition_post_ast)
+        Code.eval_quoted_with_env(derives_ast, [], __ENV__)
+        Code.eval_quoted_with_env(definition_pre_ast, [], __ENV__)
+        Code.eval_quoted_with_env(definition_post_ast, [], __ENV__)
 
         structure do
           unquote(ast)
