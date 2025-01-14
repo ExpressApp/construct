@@ -468,11 +468,9 @@ defmodule Construct.Type do
     {:ok, Enum.reverse(acc)}
   end
 
-  defp map(list, type, fun, acc, opts \\ [])
-
   defp map([{key, value} | t], type, fun, acc, opts) do
     case fun.(type, value, opts) do
-      {:ok, value} -> map(t, type, fun, Map.put(acc, key, value))
+      {:ok, value} -> map(t, type, fun, Map.put(acc, key, value), opts)
       {:error, reason} -> {:error, reason}
       :error -> :error
     end

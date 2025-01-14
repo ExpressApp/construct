@@ -5,7 +5,7 @@ defmodule Construct.Compiler do
   alias Construct.Compiler.AST
 
   @registry Construct.Registry
-  @no_default :__construct_no_default__
+  @no_default :__construct_no_default_value__
 
   def construct_module?(module) do
     registered_type?(module) || ensure_compiled?(module) && function_exported?(module, :__construct__, 1)
