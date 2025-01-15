@@ -1,5 +1,10 @@
 ## Changelog
 
+## v3.0.3
+
+* Enhancements
+  * Able to override cast/2
+
 ## v3.0.2
 
 * Enhancements
