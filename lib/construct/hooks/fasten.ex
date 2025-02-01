@@ -63,11 +63,19 @@ defmodule Construct.Hooks.Fasten do
         cast_clause =
           quote do
             defp unquote(function_name)(%{unquote(to_string(name)) => term}, opts) do
-              Construct.Type.cast(unquote(type), term, opts)
+              case Construct.Type.cast(unquote(type), term, opts) do
+                {:ok, term} -> {:ok, term}
+                {:error, reason} -> {:error, %{unquote(name) => reason}}
+                :error -> {:error, %{unquote(name) => :invalid}}
+              end
             end
 
             defp unquote(function_name)(%{unquote(name) => term}, opts) do
-              Construct.Type.cast(unquote(type), term, opts)
+              case Construct.Type.cast(unquote(type), term, opts) do
+                {:ok, term} -> {:ok, term}
+                {:error, reason} -> {:error, %{unquote(name) => reason}}
+                :error -> {:error, %{unquote(name) => :invalid}}
+              end
             end
           end
 
