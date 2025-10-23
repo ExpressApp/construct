@@ -80,7 +80,7 @@ defmodule Construct do
         make(params, opts)
       end
 
-      defoverridable make: 2, cast: 2
+      defoverridable make: 2, make!: 2, cast: 2
     end
   end
 
