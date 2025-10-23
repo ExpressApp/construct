@@ -2,7 +2,7 @@ defmodule Construct.Hooks.Fasten do
   defmacro __using__(_opts \\ []) do
     quote do
       structure_compile_hook :post do
-        Module.eval_quoted(__MODULE__, Construct.Hooks.Fasten.__compile__(__MODULE__, Enum.reverse(@fields)))
+        Code.eval_quoted(Construct.Hooks.Fasten.__compile__(__MODULE__, Enum.reverse(@fields)), [], __ENV__)
 
         defoverridable make: 2
       end
